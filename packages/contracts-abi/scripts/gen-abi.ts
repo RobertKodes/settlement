@@ -18,6 +18,7 @@ const contracts = [
   "USDCPaymaster",
   "EntryPoint",
   "NetworkVersion",
+  "StableSwapPool",
 ];
 const exportsList: string[] = [];
 for (const name of contracts) {

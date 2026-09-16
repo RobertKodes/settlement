@@ -70,6 +70,27 @@ importers:
 
   packages/contracts-abi: {}
 
+  packages/router:
+    dependencies:
+      '@settlement/chain':
+        specifier: workspace:*
+        version: link:../chain
+      '@settlement/config':
+        specifier: workspace:*
+        version: link:../config
+      '@settlement/contracts-abi':
+        specifier: workspace:*
+        version: link:../contracts-abi
+      '@settlement/integration-arc':
+        specifier: workspace:*
+        version: link:../../integrations/circle/arc
+      '@settlement/types':
+        specifier: workspace:*
+        version: link:../types
+      viem:
+        specifier: ^2.37.0
+        version: 2.56.5(typescript@5.9.3)(zod@4.6.5)
+
   packages/types:
     dependencies:
       zod:
@@ -89,6 +110,9 @@ importers:
       '@settlement/contracts-abi':
         specifier: workspace:*
         version: link:../../packages/contracts-abi
+      '@settlement/router':
+        specifier: workspace:*
+        version: link:../../packages/router
       '@settlement/types':
         specifier: workspace:*
         version: link:../../packages/types

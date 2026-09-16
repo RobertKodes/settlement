@@ -9,6 +9,7 @@ import type { AccountRepository } from "../repos/accounts.js";
 import type { AsyncIdempotencyStore } from "../repos/idempotency.js";
 import type { IntentRepository } from "../repos/intents.js";
 import { newPublicId } from "../repos/intents.js";
+import type { SwapQuoteDraft } from "../swap.js";
 
 const Hex = z.string().regex(/^0x([0-9a-fA-F]{2})*$/);
 const AuthorizeSchema = z.object({ permitSignature: Hex, signature: Hex.optional() });
@@ -123,24 +124,51 @@ export function registerIntentRoutes(app: FastifyInstance, deps: IntentDeps): vo
     const executing = await deps.intents.transition(locked.intentId, "EXECUTING");
     try {
       const sender = (await deps.accounts.byId(rec.accountId))!;
-      const amount = BigInt(rec.intent.source.amount);
-      const result = await deps.engine.execute(op, sender.address, amount);
       const recipient = rec.state.recipient as { address: `0x${string}`; accountId?: string };
+      const amount = BigInt(rec.intent.source.amount);
+      const isSwap = rec.intent.action === "swap";
+      const swapDraft = draft as SwapQuoteDraft;
+      const tokenOut = isSwap
+        ? rec.intent.destination.asset === "USDC"
+          ? deps.engine.tokens.usdc
+          : deps.engine.tokens.eurc
+        : undefined;
+      const result = await deps.engine.execute(op, sender.address, amount, tokenOut);
       let ledgerRef: { ledgerTransactionId: string; chainTransactionId: string } | undefined;
       if (deps.ledger) {
-        ledgerRef = await deps.ledger.postTransfer({
-          intentId: rec.intentId,
-          chainId: deps.engine.chainId,
-          token: tokenOf(op),
-          symbol: "USDC",
-          decimals: 6,
-          from: rec.accountId,
-          to: recipient.accountId,
-          amount,
-          fee: result.feeBaseUnits,
-          txHash: result.txHash,
-          blockNumber: result.blockNumber,
-        });
+        ledgerRef = isSwap
+          ? await deps.ledger.postSwap({
+              intentId: rec.intentId,
+              chainId: deps.engine.chainId,
+              tokenIn:
+                tokenOf(op) === deps.engine.tokens.usdc && rec.intent.source.asset === "USDC"
+                  ? deps.engine.tokens.usdc
+                  : deps.engine.tokens.eurc!,
+              symbolIn: rec.intent.source.asset,
+              tokenOut: tokenOut!,
+              symbolOut: rec.intent.destination.asset,
+              account: rec.accountId,
+              amountIn: amount,
+              amountOut: result.receivedBaseUnits,
+              fee: result.feeBaseUnits,
+              feeToken: deps.engine.tokens.usdc,
+              feeSymbol: "USDC",
+              txHash: result.txHash,
+              blockNumber: result.blockNumber,
+            })
+          : await deps.ledger.postTransfer({
+              intentId: rec.intentId,
+              chainId: deps.engine.chainId,
+              token: tokenOf(op),
+              symbol: "USDC",
+              decimals: 6,
+              from: rec.accountId,
+              to: recipient.accountId,
+              amount,
+              fee: result.feeBaseUnits,
+              txHash: result.txHash,
+              blockNumber: result.blockNumber,
+            });
       }
       const settlementId = newPublicId("stl");
       const settled = await deps.intents.transition(executing.intentId, "SETTLED", {
@@ -150,6 +178,10 @@ export function registerIntentRoutes(app: FastifyInstance, deps: IntentDeps): vo
           blockNumber: result.blockNumber.toString(),
           userOpHash: result.userOpHash,
           feeBaseUnits: result.feeBaseUnits.toString(),
+          receivedBaseUnits: result.receivedBaseUnits.toString(),
+          route: isSwap
+            ? swapDraft.route
+            : [{ venue: "native-transfer", shareBps: 10_000, chainId: deps.engine.chainId }],
           settledAt: new Date().toISOString(),
           ledger: ledgerRef,
         },

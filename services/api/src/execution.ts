@@ -36,6 +36,9 @@ export interface ChainDeps {
   paymaster: Address;
   usdc: Address;
   rollup?: Address;
+  /** Milestone D: USDC/EURC StableSwap pool and the EURC token, when deployed. */
+  eurc?: Address;
+  pool?: Address;
 }
 
 /** JSON- and database-safe form of PackedUserOperation (bigints as decimal strings). */
@@ -83,6 +86,10 @@ export class ExecutionEngine {
     return CHAINS[this.deps.chainKey].chainId;
   }
 
+  get tokens(): { usdc: Address; eurc?: Address } {
+    return { usdc: this.deps.usdc, ...(this.deps.eurc ? { eurc: this.deps.eurc } : {}) };
+  }
+
   /** Resolve the destination of a transfer intent: an address, or a known account's address. */
   resolveRecipient(
     intent: Intent,
@@ -98,6 +105,19 @@ export class ExecutionEngine {
 
   /** Builds the unsigned operation and the digests to sign. Only USDC transfers on this chain are supported today. */
   async quote(intent: Intent, sender: AccountRecord, recipient: Address): Promise<QuoteDraft> {
+    if (intent.action === "swap") {
+      if (!this.deps.eurc || !this.deps.pool)
+        throw new Error(
+          "swap needs the EURC token and the StableSwap pool deployed (make devnet-deploy)",
+        );
+      const { quoteSwap } = await import("./swap.js");
+      return quoteSwap(
+        { ...this.deps, eurc: this.deps.eurc, pool: this.deps.pool },
+        intent,
+        sender,
+        this.chainId,
+      );
+    }
     if (intent.action !== "transfer")
       throw new Error(`action ${intent.action} not supported by the devnet execution engine`);
     if (intent.source.asset !== "USDC")
@@ -208,7 +228,14 @@ export class ExecutionEngine {
     op: PackedUserOperation,
     sender: Address,
     amountOut: bigint,
-  ): Promise<{ txHash: Hex; blockNumber: bigint; userOpHash: Hex; feeBaseUnits: bigint }> {
+    tokenOut?: Address,
+  ): Promise<{
+    txHash: Hex;
+    blockNumber: bigint;
+    userOpHash: Hex;
+    feeBaseUnits: bigint;
+    receivedBaseUnits: bigint;
+  }> {
     const { l2, bundler, entryPoint, usdc } = this.deps;
     const before = await l2.readContract({
       address: usdc,
@@ -216,6 +243,14 @@ export class ExecutionEngine {
       functionName: "balanceOf",
       args: [sender],
     });
+    const outBefore = tokenOut
+      ? await l2.readContract({
+          address: tokenOut,
+          abi: testUSDCAbi,
+          functionName: "balanceOf",
+          args: [sender],
+        })
+      : 0n;
     const [res] = await submitUserOps(bundler, l2, entryPoint, [op], bundler.account.address);
     if (!res) throw new Error("no UserOperationEvent in receipt");
     if (!res.success)
@@ -226,11 +261,20 @@ export class ExecutionEngine {
       functionName: "balanceOf",
       args: [sender],
     });
+    const outAfter = tokenOut
+      ? await l2.readContract({
+          address: tokenOut,
+          abi: testUSDCAbi,
+          functionName: "balanceOf",
+          args: [sender],
+        })
+      : 0n;
     return {
       txHash: res.txHash,
       blockNumber: res.blockNumber,
       userOpHash: res.userOpHash,
       feeBaseUnits: before - after - amountOut,
+      receivedBaseUnits: outAfter - outBefore,
     };
   }
 

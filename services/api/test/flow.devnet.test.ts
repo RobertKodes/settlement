@@ -135,3 +135,104 @@ describe.skipIf(!enabled)(
     }, 180_000);
   },
 );
+
+describe.skipIf(!enabled || !chain?.pool)(
+  "devnet flow: swap USDC -> EURC through the router and the native pool",
+  () => {
+    const db = connect(DATABASE_URL);
+    const engine = new ExecutionEngine(chain!);
+    const app = buildApp({
+      intents: new PgIntentRepository(db),
+      accounts: new PgAccountRepository(db),
+      idempotency: new PgIdempotencyStore(db),
+      ledger: new PgLedgerPoster(db),
+      engine,
+    });
+    beforeAll(() => app.ready());
+    afterAll(async () => {
+      await app.close();
+      await db.end({ timeout: 2 });
+    });
+
+    it("ranks native vs arc, executes on the pool, receives EURC, pays the fee in USDC", async () => {
+      const run = `${Date.now().toString(36)}s`;
+      const carol = Passkey.random();
+      const res = await app.inject({
+        method: "POST",
+        url: "/v1/accounts",
+        payload: { handle: `carol-${run}`, kind: "business", passkey: carol.publicKey() },
+      });
+      expect(res.statusCode, res.body).toBe(201);
+      const c = res.json() as { accountId: string; address: `0x${string}` };
+      const mint = await chain!.bundler.writeContract({
+        address: chain!.usdc,
+        abi: testUSDCAbi,
+        functionName: "mint",
+        args: [c.address, parseUnits("2000", 6)],
+      });
+      await chain!.l2.waitForTransactionReceipt({ hash: mint });
+
+      const created = await app.inject({
+        method: "POST",
+        url: "/v1/intents",
+        headers: { "idempotency-key": `k-${run}`, "x-account-id": c.accountId },
+        payload: {
+          action: "swap",
+          source: { asset: "USDC", amount: parseUnits("1000", 6).toString() },
+          destination: { asset: "EURC", recipient: `carol-${run}` },
+          constraints: { maxSlippageBps: 50 },
+        },
+      });
+      expect(created.statusCode, created.body).toBe(201);
+      const intentId = created.json().intentId as string;
+      const quoted = await app.inject({ method: "POST", url: `/v1/intents/${intentId}/quote` });
+      expect(quoted.statusCode, quoted.body).toBe(200);
+      const draft = quoted.json().state.quote as {
+        digests: { permit: `0x${string}` };
+        route: Array<{ venue: string }>;
+        ranked: Array<{ venue: string; executable: boolean }>;
+        output: { amountBaseUnits: string };
+      };
+      expect(draft.route[0]?.venue).toBe("native-stableswap");
+      expect(draft.ranked.map((r) => r.venue)).toContain("arc-stablefx");
+      expect(BigInt(draft.output.amountBaseUnits)).toBeGreaterThan(parseUnits("990", 6));
+
+      const permitSignature = carol.sign(draft.digests.permit);
+      const step1 = await app.inject({
+        method: "POST",
+        url: `/v1/intents/${intentId}/authorize`,
+        payload: { permitSignature },
+      });
+      const signature = carol.sign(step1.json().userOpHash);
+      const settled = await app.inject({
+        method: "POST",
+        url: `/v1/intents/${intentId}/authorize`,
+        payload: { permitSignature, signature },
+      });
+      expect(settled.statusCode, settled.body).toBe(200);
+      expect(settled.json().status).toBe("SETTLED");
+      const received = BigInt(settled.json().state.receivedBaseUnits);
+      expect(received).toBeGreaterThan(parseUnits("990", 6));
+      expect(
+        await chain!.l2.readContract({
+          address: chain!.eurc!,
+          abi: testUSDCAbi,
+          functionName: "balanceOf",
+          args: [c.address],
+        }),
+      ).toBe(received);
+
+      const receipt = await app.inject({ method: "GET", url: `/v1/settlements/${intentId}` });
+      expect(receipt.statusCode, receipt.body).toBe(200);
+      expect(receipt.json().route[0].venue).toBe("native-stableswap");
+      expect(receipt.json().legs).toHaveLength(2);
+      const perAsset = await db<
+        { asset_id: string; s: string }[]
+      >`select e.asset_id, sum(e.amount)::text as s from ledger_entry e join ledger_transaction t on t.id = e.ledger_transaction_id where t.idempotency_key = ${`intent:${intentId}`} group by e.asset_id`;
+      for (const row of perAsset) expect(row.s).toBe("0");
+      console.log(
+        `swap ${intentId}: received ${received} EURC for 1000 USDC, fee ${settled.json().state.feeBaseUnits}`,
+      );
+    }, 180_000);
+  },
+);

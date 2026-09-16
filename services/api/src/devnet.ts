@@ -50,5 +50,7 @@ export function devnetChainDeps(
     paymaster: contracts.USDCPaymaster!,
     usdc: contracts.TestUSDC!,
     ...(rollup ? { rollup } : {}),
+    ...(contracts.TestEURC ? { eurc: contracts.TestEURC } : {}),
+    ...(contracts.StableSwapPool ? { pool: contracts.StableSwapPool } : {}),
   };
 }

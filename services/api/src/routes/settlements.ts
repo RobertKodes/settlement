@@ -37,19 +37,36 @@ export function registerSettlementRoutes(
     const receipt: SettlementReceipt = SettlementReceiptSchema.parse({
       settlementId: st.settlementId,
       intentId: current.intentId,
-      route: [{ venue: "native-transfer", shareBps: 10_000, chainId: deps.engine?.chainId }],
+      route: (st as { route?: Array<{ venue: string; shareBps: number; chainId?: number }> })
+        .route ?? [{ venue: "native-transfer", shareBps: 10_000, chainId: deps.engine?.chainId }],
       transactions: [
         { chainId: deps.engine?.chainId ?? 0, txHash: st.txHash, blockNumber: Number(blockNumber) },
       ],
-      legs: [
-        {
-          from: `acct_${current.accountId.replace(/-/g, "")}`.slice(0, 40),
-          to: st.recipient?.accountId
-            ? `acct_${st.recipient.accountId.replace(/-/g, "")}`.slice(0, 40)
-            : "acct_external",
-          amount: { ...current.intent.source, chainId: deps.engine?.chainId },
-        },
-      ],
+      legs:
+        current.intent.action === "swap"
+          ? [
+              {
+                from: acctId(current.accountId),
+                to: "acct_external",
+                amount: { ...current.intent.source, chainId: deps.engine?.chainId },
+              },
+              {
+                from: "acct_external",
+                to: acctId(current.accountId),
+                amount: {
+                  asset: current.intent.destination.asset,
+                  amount: (st as { receivedBaseUnits?: string }).receivedBaseUnits ?? "0",
+                  chainId: deps.engine?.chainId,
+                },
+              },
+            ]
+          : [
+              {
+                from: acctId(current.accountId),
+                to: st.recipient?.accountId ? acctId(st.recipient.accountId) : "acct_external",
+                amount: { ...current.intent.source, chainId: deps.engine?.chainId },
+              },
+            ],
       fees: { network: formatUsdc(st.feeBaseUnits ?? "0"), execution: "0", crosschain: "0" },
       createdAt: current.createdAt,
       settledAt: st.settledAt,
@@ -72,6 +89,10 @@ export function registerSettlementRoutes(
       finalizedL2Block: fin.finalizedL2Block?.toString(),
     };
   });
+}
+
+function acctId(uuid: string): string {
+  return `acct_${uuid.replace(/-/g, "")}`.slice(0, 40);
 }
 
 function formatUsdc(baseUnits: string): string {

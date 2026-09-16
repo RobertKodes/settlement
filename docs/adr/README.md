@@ -15,8 +15,8 @@ are the decisions blueprint section 38 says must be made before heavy coding.
 | [0007](0007-canonical-usdc-representation.md) | Canonical USDC representation before Circle native support | Accepted (local devnet) |
 | [0008](0008-smart-account-standard.md) | Smart-account standard | Accepted |
 | [0009](0009-upgradeability-strategy.md) | Upgradeability strategy | Proposed |
-| [0010](0010-dex-architecture.md) | DEX architecture: custom vs proven components | Proposed |
-| [0011](0011-stableswap-invariant.md) | StableSwap invariant | Proposed |
+| [0010](0010-dex-architecture.md) | DEX architecture: custom vs proven components | Accepted (devnet) |
+| [0011](0011-stableswap-invariant.md) | StableSwap invariant | Accepted (devnet) |
 | [0012](0012-concentrated-liquidity-design.md) | Concentrated-liquidity design | Proposed |
 | [0013](0013-rfq-signature-and-settlement.md) | RFQ signature and settlement standard | Proposed |
 | [0014](0014-intent-format.md) | Intent format v1 | Accepted |

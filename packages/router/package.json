@@ -1,0 +1,31 @@
+{
+  "name": "@settlement/router",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Smart router (blueprint section 8): venue adapters, all-in execution score, route selection",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@settlement/chain": "workspace:*",
+    "@settlement/config": "workspace:*",
+    "@settlement/contracts-abi": "workspace:*",
+    "@settlement/integration-arc": "workspace:*",
+    "@settlement/types": "workspace:*",
+    "viem": "^2.37.0"
+  }
+}

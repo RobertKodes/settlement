@@ -21,6 +21,7 @@
     "zod": "^4.1.0",
     "@settlement/chain": "workspace:*",
     "@settlement/contracts-abi": "workspace:*",
-    "postgres": "^3.4.7"
+    "postgres": "^3.4.7",
+    "@settlement/router": "workspace:*"
   }
 }

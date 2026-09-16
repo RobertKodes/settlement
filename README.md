@@ -37,6 +37,7 @@ make devnet-up         # local L1 (Besu+Teku) + L2 (Maru+Besu) + coordinator + d
 make devnet-status     # chain IDs, block heights, L1 finality, service table
 make devnet-deploy     # NetworkVersion + TestUSDC on the L2 -> chain/lineth/deployments.local.json
 make devnet-milestone-c # EntryPoint v0.8 + passkey account + USDC-paid gas, end to end on the L2
+# pnpm --filter @settlement/api test:devnet  -> transfer and swap intents end to end (Milestones C, D, E)
 make services-up       # Postgres 16 (:5439) + Redis 7 (:6389) for the ledger
 make ledger-migrate    # applies services/ledger/migrations/*.sql
 make test              # vitest across packages + forge test
@@ -56,10 +57,11 @@ make test              # vitest across packages + forge test
 | `packages/types/` | `@settlement/types`: intent, quote, settlement receipt (zod + generated JSON Schema) | done |
 | `packages/contracts-abi/` | ABIs generated from the Foundry artifacts (`pnpm gen:abi`), committed | done |
 | `packages/chain/` | `@settlement/chain`: viem clients, P-256 passkey signing, ERC-4337 v0.8 user-op building + paymaster data, submission, L1-finality reads; `pnpm --filter @settlement/chain test:devnet` replays Milestone C from TypeScript | Milestone C |
+| `packages/router/` | `@settlement/router`: venue adapters (native StableSwap, Arc StableFX mock), all-in execution score, route selection | Milestone E |
 | `packages/config/` | `@settlement/config`: chain registry with chain-scoped decimals, CCTP domains, Circle/Bridge endpoints, env loader | done |
 | `integrations/circle/{cctp,gateway,arc}/` | interfaces + in-memory mocks + tests | interfaces only |
 | `integrations/fiat/` | `FiatProvider` interface + mock; Bridge mapping | interfaces only |
-| `protocol/contracts/` | Foundry: `TestUSDC` (EIP-2612 + ERC-1271 permit), `PasskeyAccount` + factory (ERC-4337 v0.8, P-256, ERC-7821), `USDCPaymaster` (Circle-compatible permit fee flow), Milestone C tests | Milestone C |
+| `protocol/contracts/` | Foundry: `TestUSDC` (EIP-2612 + ERC-1271 permit), `PasskeyAccount` + factory (ERC-4337 v0.8, P-256, ERC-7821), `USDCPaymaster` (Circle-compatible permit fee flow), Milestone C tests, `StableSwapPool` (Curve invariant, fuzzed) | Milestones C, D |
 | `services/api/` | `@settlement/api`: accounts (passkey-bound), intents with quote/authorize/execute through the paymaster, ledger posting, settlement receipts with L1 finality; Postgres repositories; `test:devnet` end-to-end | product spine |
 | `services/ledger/` | schema v1 (every blueprint section 27 entity) + 0002 (API idempotency, wallet signer), `ledger_post()`, migrate/smoke scripts | done |
 | `infra/docker/`, `infra/ci/`, `.github/workflows/ci.yml` | services compose; CI jobs `ts`, `contracts`, `schema`, `name-check` | done |
