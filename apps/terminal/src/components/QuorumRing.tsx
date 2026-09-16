@@ -12,7 +12,7 @@ export function QuorumRing({ have, need, label }: { have: number; need: number; 
         const done = i < have;
         return (
           <circle
-            key={i}
+            key={`arc-${off}-${done ? "on" : "off"}`}
             cx="48"
             cy="48"
             r={r}

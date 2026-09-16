@@ -41,9 +41,7 @@
   },
   "overrides": [
     {
-      "includes": [
-        "apps/terminal/**"
-      ],
+      "includes": ["apps/terminal/**"],
       "linter": {
         "rules": {
           "a11y": "off"
