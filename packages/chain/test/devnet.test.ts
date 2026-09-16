@@ -125,6 +125,7 @@ describe.skipIf(!enabled)("devnet: passkey account pays gas in USDC", () => {
     if (existsSync(addrFile)) {
       const rollup = (JSON.parse(readFileSync(addrFile, "utf8")) as { l1: Record<string, Address> })
         .l1.LinethRollupV8;
+      if (!rollup) throw new Error("LinethRollupV8 missing in upstream addresses.json");
       const finalized = await readFinalizedL2Block(publicClient("l1-local"), rollup);
       expect(["INCLUDED", "FINALIZED"]).toContain(finalityOf(result!.blockNumber, finalized));
     }
