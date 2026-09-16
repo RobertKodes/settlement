@@ -14,5 +14,11 @@ Fiat is a regulated edge outside the protocol. Bridge (`https://apidocs.bridge.x
 - Every inbound webhook is verified (`webhookVerify`) and de-duplicated on event id; returns/reversals are ledger reversals, not edits.
 - No claim that Bridge or Circle acts as a regulated intermediary unless an agreement says so (section 17); legal review per jurisdiction before production.
 
+## Implemented 2026-09-16
+`services/api/src/fiat.ts` + `routes/fiat.ts`: on-ramp (provider transfer + bank instructions), verified and de-duplicated
+webhooks, USDC credit from the treasury on `payment_processed`, `fiat_in`/`fiat_out` ledger posts, off-ramp request,
+reconciliation run. The provider is `MockFiatProvider` until Bridge sandbox credentials exist; the Bridge adapter slots
+in behind the same interface and routes.
+
 ## Verification
 `MockFiatProvider` tests (idempotent on-ramp creation, webhook rejection); schema `fiat_transfer` state machine.

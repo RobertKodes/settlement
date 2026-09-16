@@ -18,6 +18,12 @@ Fastify + zod, conventions in `docs/api/conventions.md` (ADR-0024). Persistence 
 | `POST` | `/v1/intents/:id/sign` | `settle` intents: `{party: A|B, signature, permit?}` each party's authorization of the DvP typed data |
 | `POST` | `/v1/intents/:id/approve` | `{approver}` records an approval against the governing policy |
 | `POST` | `/v1/intents/:id/execute` | `settle` intents: with both signatures and every required approval, the settlement agent runs `DvPSettlement.settleWithPermits` atomically → `SETTLED` |
+| `POST` | `/v1/fiat/onramp` | `{accountId, currency, amount}` → provider transfer + bank instructions (Milestone G) |
+| `POST` | `/v1/fiat/offramp` | `{accountId, beneficiaryId, amountBaseUnits}` → provider payout request; client funds the treasury with a transfer intent |
+| `POST` | `/v1/webhooks/fiat/:provider` | provider events, signature-verified and de-duplicated; `payment_processed` credits USDC and posts `fiat_in` |
+| `GET` | `/v1/fiat/transfers/:provider/:id` | our record + the provider's live state |
+| `POST` | `/v1/reconciliation/run` | ledger `available` balances vs on-chain balances (`{accountId}` to scope); writes `reconciliation_run` |
+| `GET` | `/v1/reconciliation/runs` | last 20 runs with breaks |
 | `GET` | `/v1/settlements/:intentId` | settlement receipt (blueprint section 10) with live L1 finality; moves `SETTLED → PROVEN` |
 
 The passkey signs exactly two digests, both returned by the API: the permit (fee allowance for the

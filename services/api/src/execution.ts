@@ -28,6 +28,8 @@ import type { AccountRecord } from "./repos/accounts.js";
 /** Chain-side dependencies of the execution engine for one network (devnet today). */
 export interface ChainDeps {
   chainKey: ChainKey;
+  /** Numeric chain id, filled by the constructor of ExecutionEngine users; devnetChainDeps sets it. */
+  chainId?: number;
   l2: PublicClient;
   l1?: PublicClient;
   bundler: WalletClient;
@@ -86,6 +88,10 @@ export class ExecutionEngine {
 
   get chainId(): number {
     return CHAINS[this.deps.chainKey].chainId;
+  }
+
+  get chainDeps(): ChainDeps {
+    return this.deps;
   }
 
   get settleDeps() {

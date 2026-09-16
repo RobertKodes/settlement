@@ -38,7 +38,19 @@ export interface SettlementPost {
   blockNumber: bigint;
 }
 
+export interface FiatPost {
+  fiatTransferId: string;
+  chainId: number;
+  token: Address;
+  accountId: string;
+  direction: "in" | "out";
+  amount: bigint;
+  txHash?: Hex | undefined;
+}
+
 export interface LedgerPoster {
+  /** Fiat in: account +USDC vs provider float (external). Fiat out: the reverse. */
+  postFiat(p: FiatPost): Promise<{ ledgerTransactionId: string }>;
   /** Atomic DvP/PvP: A gives tokenA to B, B gives tokenB to A. Four entries, balanced per asset. */
   postSettlement(
     p: SettlementPost,
@@ -64,6 +76,39 @@ const hexToBuf = (h: string) => Buffer.from(h.slice(2), "hex");
 
 export class PgLedgerPoster implements LedgerPoster {
   constructor(private readonly db: Db) {}
+
+  async postFiat(p: FiatPost) {
+    return this.db.begin(async (tx) => {
+      const [asset] = await tx<
+        { id: string }[]
+      >`insert into asset (symbol, chain_id, address, decimals, kind) values ('USDC', ${p.chainId}, ${hexToBuf(p.token)}, 6, 'stablecoin')
+        on conflict (chain_id, symbol, address) do update set decimals = excluded.decimals returning id`;
+      const la = async (accountId: string | null, kind: string): Promise<string> => {
+        const rows = await tx<
+          { id: string }[]
+        >`insert into ledger_account (account_id, asset_id, kind) values (${accountId}::uuid, ${asset!.id}::uuid, ${kind})
+          on conflict (account_id, asset_id, kind) do update set kind = excluded.kind returning id`;
+        return rows[0]!.id;
+      };
+      const sign = p.direction === "in" ? 1n : -1n;
+      const entries = [
+        {
+          ledger_account_id: await la(p.accountId, "available"),
+          asset_id: asset!.id,
+          amount: (sign * p.amount).toString(),
+        },
+        {
+          ledger_account_id: await la(null, "external"),
+          asset_id: asset!.id,
+          amount: (-sign * p.amount).toString(),
+        },
+      ];
+      const [posted] = await tx<
+        { ledger_post: string }[]
+      >`select ledger_post(${`fiat:${p.fiatTransferId}:${p.direction}`}, ${p.direction === "in" ? "fiat_in" : "fiat_out"}, 'fiat_transfer', ${p.fiatTransferId}::uuid, ${tx.json(entries)}, ${p.txHash ?? null})`;
+      return { ledgerTransactionId: posted!.ledger_post };
+    });
+  }
 
   async postSettlement(p: SettlementPost) {
     return this.db.begin(async (tx) => {
@@ -220,6 +265,10 @@ export class PgLedgerPoster implements LedgerPoster {
 }
 
 export class NoopLedgerPoster implements LedgerPoster {
+  async postFiat(p: FiatPost) {
+    this.posts.push(p as never);
+    return { ledgerTransactionId: `mem-${this.posts.length}` };
+  }
   async postSettlement(p: SettlementPost) {
     this.posts.push(p as never);
     return {

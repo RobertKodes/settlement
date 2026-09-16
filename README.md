@@ -57,15 +57,16 @@ make test              # vitest across packages + forge test
 | `packages/types/` | `@settlement/types`: intent, quote, settlement receipt (zod + generated JSON Schema) | done |
 | `packages/contracts-abi/` | ABIs generated from the Foundry artifacts (`pnpm gen:abi`), committed | done |
 | `packages/chain/` | `@settlement/chain`: viem clients, P-256 passkey signing, ERC-4337 v0.8 user-op building + paymaster data, submission, L1-finality reads; `pnpm --filter @settlement/chain test:devnet` replays Milestone C from TypeScript | Milestone C |
+| `packages/sdk/` | `@settlement/sdk`: `SettlementClient` — createAccount, transfer, swap, settle (DvP) with a `Signer`; the blueprint's section-21 developer surface | done |
 | `packages/router/` | `@settlement/router`: venue adapters (native StableSwap, Arc StableFX mock), all-in execution score, route selection | Milestone E |
 | `packages/config/` | `@settlement/config`: chain registry with chain-scoped decimals, CCTP domains, Circle/Bridge endpoints, env loader | done |
 | `integrations/circle/{cctp,gateway,arc}/` | interfaces + in-memory mocks + tests | interfaces only |
 | `integrations/fiat/` | `FiatProvider` interface + mock; Bridge mapping | interfaces only |
 | `protocol/contracts/` | Foundry: `TestUSDC` (EIP-2612 + ERC-1271 permit), `PasskeyAccount` + factory (ERC-4337 v0.8, P-256, ERC-7821), `USDCPaymaster` (Circle-compatible permit fee flow), Milestone C tests, `StableSwapPool` (Curve invariant, fuzzed), `DvPSettlement` (atomic DvP/PvP, ERC-1271) | Milestones C, D, F |
-| `services/api/` | `@settlement/api`: accounts (passkey-bound), intents with quote/authorize/execute through the paymaster, ledger posting, settlement receipts with L1 finality, approval policies, two-party DvP settlement; Postgres repositories; `test:devnet` end-to-end (transfer, swap, DvP) | Milestones C-F |
+| `services/api/` | `@settlement/api`: accounts (passkey-bound), intents with quote/authorize/execute through the paymaster, ledger posting, settlement receipts with L1 finality, approval policies, two-party DvP settlement, fiat on/off-ramp with verified webhooks (mock provider), reconciliation runs; Postgres repositories; `test:devnet` end-to-end (transfer, swap, DvP, fiat, SDK) | Milestones C-G |
 | `services/ledger/` | schema v1 (every blueprint section 27 entity) + 0002 (API idempotency, wallet signer), `ledger_post()`, migrate/smoke scripts | done |
 | `infra/docker/`, `infra/ci/`, `.github/workflows/ci.yml` | services compose; CI jobs `ts`, `contracts`, `schema`, `name-check` | done |
-| `docs/architecture/`, `docs/adr/`, `docs/api/` | blueprint, 25 ADRs (10 accepted, 15 proposed), API conventions | done |
+| `docs/architecture/`, `docs/adr/`, `docs/api/`, `docs/STATUS.md` | blueprint, 25 ADRs, API conventions, **status against the blueprint** | done |
 | `security/threat-model/` | threat table with mitigation status | done |
 
 Reserved by blueprint section 25 and created when populated: `chain/{genesis,l1-contracts,prover}`,

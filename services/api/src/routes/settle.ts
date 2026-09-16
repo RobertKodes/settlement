@@ -8,7 +8,7 @@ import type { AccountRepository } from "../repos/accounts.js";
 import type { IntentRepository } from "../repos/intents.js";
 import { newPublicId } from "../repos/intents.js";
 import type { SignatureRepository } from "../repos/signatures.js";
-import { executeSettle, quoteSettle, type SettleQuoteDraft } from "../settle.js";
+import { executeSettle, type SettleQuoteDraft } from "../settle.js";
 
 const Hex = z.string().regex(/^0x([0-9a-fA-F]{2})*$/);
 const SignSchema = z.object({ party: z.enum(["A", "B"]), signature: Hex, permit: Hex.optional() });
@@ -55,7 +55,7 @@ export function registerSettleRoutes(app: FastifyInstance, deps: SettleDeps): vo
     const parsed = SignSchema.safeParse(req.body);
     if (!parsed.success) throw errors.validation({ issues: parsed.error.issues });
     const rec = await deps.intents.get(req.params.id);
-    if (!rec || rec.intent.action !== "settle") throw errors.notFound("settle intent");
+    if (rec?.intent.action !== "settle") throw errors.notFound("settle intent");
     if (rec.status !== "QUOTED") throw errors.illegalTransition(rec.status, "AUTHORIZED");
     await deps.signatures.put(rec.intentId, {
       party: parsed.data.party,
@@ -87,7 +87,7 @@ export function registerSettleRoutes(app: FastifyInstance, deps: SettleDeps): vo
 
   app.post<{ Params: { id: string } }>("/v1/intents/:id/execute", async (req) => {
     const rec = await deps.intents.get(req.params.id);
-    if (!rec || rec.intent.action !== "settle") throw errors.notFound("settle intent");
+    if (rec?.intent.action !== "settle") throw errors.notFound("settle intent");
     if (!deps.engine?.settleDeps)
       throw errors.unsupported("DvP settlement contract not configured");
     const draft = rec.state.quote as SettleQuoteDraft | undefined;

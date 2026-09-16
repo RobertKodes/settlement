@@ -22,6 +22,10 @@
     "@settlement/chain": "workspace:*",
     "@settlement/contracts-abi": "workspace:*",
     "postgres": "^3.4.7",
-    "@settlement/router": "workspace:*"
+    "@settlement/router": "workspace:*",
+    "@settlement/integration-fiat": "workspace:*"
+  },
+  "devDependencies": {
+    "@settlement/sdk": "workspace:*"
   }
 }

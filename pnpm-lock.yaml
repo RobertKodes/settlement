@@ -91,6 +91,15 @@ importers:
         specifier: ^2.37.0
         version: 2.56.5(typescript@5.9.3)(zod@4.6.5)
 
+  packages/sdk:
+    dependencies:
+      '@settlement/chain':
+        specifier: workspace:*
+        version: link:../chain
+      '@settlement/types':
+        specifier: workspace:*
+        version: link:../types
+
   packages/types:
     dependencies:
       zod:
@@ -110,6 +119,9 @@ importers:
       '@settlement/contracts-abi':
         specifier: workspace:*
         version: link:../../packages/contracts-abi
+      '@settlement/integration-fiat':
+        specifier: workspace:*
+        version: link:../../integrations/fiat
       '@settlement/router':
         specifier: workspace:*
         version: link:../../packages/router
@@ -128,6 +140,10 @@ importers:
       zod:
         specifier: ^4.1.0
         version: 4.6.5
+    devDependencies:
+      '@settlement/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
 
 packages:
 

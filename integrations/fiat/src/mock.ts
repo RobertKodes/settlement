@@ -19,11 +19,16 @@ export class MockFiatProvider implements FiatProvider {
   private readonly transfers = new Map<string, Transfer>();
   private readonly byIdempotency = new Map<string, string>();
   private seq = 0;
+  /** Ids are unique per provider instance so several test runs against one database never collide. */
+  private readonly instance = Math.random().toString(36).slice(2, 8);
 
   async createCustomer(input: CreateCustomerInput): Promise<ProviderCustomer> {
     const existing = this.customers.get(input.accountId);
     if (existing) return existing;
-    const c = { providerCustomerId: `cus_${this.seq++}`, state: "pending" as const };
+    const c = {
+      providerCustomerId: `cus_${this.instance}_${this.seq++}`,
+      state: "pending" as const,
+    };
     this.customers.set(input.accountId, c);
     return c;
   }
@@ -32,7 +37,7 @@ export class MockFiatProvider implements FiatProvider {
     const prior = this.byIdempotency.get(idempotencyKey);
     if (prior) return this.transfers.get(prior)!;
     const t: Transfer = {
-      providerTransferId: `tr_${this.seq++}`,
+      providerTransferId: `tr_${this.instance}_${this.seq++}`,
       state: "awaiting_funds",
       updatedAt: new Date().toISOString(),
       ...(instructions ? { instructions } : {}),

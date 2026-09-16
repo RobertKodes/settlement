@@ -82,8 +82,7 @@ export async function quoteSwap(
       : {}),
   });
   const exec = decision.chosen.execution;
-  if (!exec || exec.kind !== "stableswap")
-    throw new Error("chosen venue is not executable on this chain");
+  if (exec?.kind !== "stableswap") throw new Error("chosen venue is not executable on this chain");
 
   const { l2, entryPoint, factory, paymaster, usdc } = deps;
   const tokenIn = tokenOf(deps, from);

@@ -1,0 +1,27 @@
+{
+  "name": "@settlement/sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TypeScript SDK (blueprint section 21): one client for accounts, transfers, swaps and settlements with passkey signing",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@settlement/chain": "workspace:*",
+    "@settlement/types": "workspace:*"
+  }
+}

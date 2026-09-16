@@ -42,6 +42,7 @@ export function devnetChainDeps(
     : undefined;
   return {
     chainKey: "l2-devnet",
+    chainId: 1337,
     l2: publicClient("l2-devnet", env.L2_RPC_URL),
     l1: publicClient("l1-local", env.L1_RPC_URL),
     bundler: walletClient("l2-devnet", bundlerKey, env.L2_RPC_URL),
