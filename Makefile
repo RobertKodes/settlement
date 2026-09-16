@@ -9,7 +9,7 @@ CHAIN_SCRIPTS := chain/scripts
 FORGE ?= $(shell command -v forge 2>/dev/null || echo $(HOME)/.foundry/bin/forge)
 
 .PHONY: help doctor bootstrap install build lint lint-fix typecheck test forge-build forge-test \
-        devnet-bootstrap devnet-preflight devnet-up devnet-status devnet-logs devnet-down devnet-reset devnet-deploy \
+        devnet-bootstrap devnet-preflight devnet-up devnet-status devnet-logs devnet-down devnet-reset devnet-deploy devnet-milestone-c \
         services-up services-down ledger-migrate adr-new check-name
 
 help: ## Show this help
@@ -70,6 +70,9 @@ devnet-reset: ## Stop the devnet and wipe volumes/artifacts (required after a ch
 
 devnet-deploy: ## Deploy NetworkVersion + TestUSDC to the running L2, record chain/lineth/deployments.local.json
 	@bash $(CHAIN_SCRIPTS)/deploy.sh
+
+devnet-milestone-c: ## Milestone C on the devnet: passkey account + USDC-paid gas via EntryPoint v0.8
+	@bash $(CHAIN_SCRIPTS)/milestone_c.sh
 
 services-up: ## Postgres 16 + Redis 7 for the ledger (infra/docker/compose.services.yml)
 	docker compose -f infra/docker/compose.services.yml up -d --wait

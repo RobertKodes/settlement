@@ -24,6 +24,10 @@ not done until this table is updated (blueprint section 34).
 | fiat | bank return / reversal | ledger | reversing `ledger_transaction`, never edits; `returned` state modelled | done | 0015 |
 | fiat | identity mismatch / provider outage | fiat adapter | provider abstraction, onboarding state machine, ops dashboard | planned | 0019 |
 | accounts | passkey compromise, session theft | auth | WebAuthn, device binding, MFA for institutions, session revocation | planned | 0008 |
+| accounts | user-op signature forgery / replay | PasskeyAccount | P-256 over the EntryPoint v0.8 typed-data hash (chain id + entry point in the domain), EntryPoint nonces; wrong-key op rejected in tests | partial | 0008 |
+| accounts | ERC-1271 cross-context replay | PasskeyAccount | per-account key today; ERC-7739 rehashing before production | planned | 0008 |
+| gas | paymaster drained by over-charging or unbounded permits | USDCPaymaster | prefund capped at `maxCost` and at `permitAmount`, refund in `_postOp`, permit amount checked before pulling funds | partial | 0006 |
+| gas | stale/manipulated token price | USDCPaymaster | owner-set stub on the devnet; OracleAdapter with freshness/deviation bounds before any real value | planned | 0006, 0020 |
 | accounts | recovery abuse, privilege escalation, malicious delegate | policy engine | N-of-M approvals, new-recipient secondary approval, agent budgets, audit trail | partial (schema) | 0008 |
 | accounts | API key leakage | api_key | hashed storage, scopes, IP allowlist, rotation, prefix display only | partial (schema) | 0024 |
 | operations | CI / dependency compromise | infra/ci | pinned actions, `--frozen-lockfile`, submodule pinning, signed images (later) | partial | 0021 |

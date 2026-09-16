@@ -11,7 +11,7 @@ are the decisions blueprint section 38 says must be made before heavy coding.
 | [0003](0003-data-availability.md) | Data availability configuration | Proposed |
 | [0004](0004-sequencer-operator-topology.md) | Sequencer and operator topology | Proposed |
 | [0005](0005-prover-topology.md) | Prover topology and hardware sizing | Accepted |
-| [0006](0006-fee-and-gas-model.md) | Fee and gas model | Proposed |
+| [0006](0006-fee-and-gas-model.md) | Fee and gas model | Accepted (devnet) |
 | [0007](0007-canonical-usdc-representation.md) | Canonical USDC representation before Circle native support | Accepted (local devnet) |
 | [0008](0008-smart-account-standard.md) | Smart-account standard | Accepted |
 | [0009](0009-upgradeability-strategy.md) | Upgradeability strategy | Proposed |

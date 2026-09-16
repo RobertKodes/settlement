@@ -11,10 +11,11 @@ solc_version = "0.8.30"
 evm_version = "prague"
 optimizer = true
 optimizer_runs = 10_000
-via_ir = false
+# account-abstraction v0.8 (EntryPoint) needs the IR pipeline; upstream compiles it with viaIR + 1M runs.
+via_ir = true
 bytecode_hash = "none"
 cbor_metadata = false
-fs_permissions = []
+fs_permissions = [{ access = "read-write", path = "./out" }]
 gas_reports = ["*"]
 
 [fmt]
