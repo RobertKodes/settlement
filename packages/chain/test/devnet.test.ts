@@ -43,8 +43,24 @@ const enabled = process.env.DEVNET === "1" && existsSync(depFile) && existsSync(
 
 describe.skipIf(!enabled)("devnet: passkey account pays gas in USDC", () => {
   it("creates the account, pays a merchant, charges the fee in USDC and reports finality", async () => {
-    const dep = JSON.parse(readFileSync(depFile, "utf8")) as { contracts: Record<string, Address> };
+    const dep = JSON.parse(readFileSync(depFile, "utf8")) as {
+      contracts: {
+        EntryPoint: Address;
+        PasskeyAccountFactory: Address;
+        USDCPaymaster: Address;
+        TestUSDC: Address;
+      };
+    };
     const { EntryPoint, PasskeyAccountFactory, USDCPaymaster, TestUSDC } = dep.contracts;
+    for (const [k, v] of Object.entries({
+      EntryPoint,
+      PasskeyAccountFactory,
+      USDCPaymaster,
+      TestUSDC,
+    })) {
+      if (!v)
+        throw new Error(`${k} missing in deployments.local.json — run make devnet-milestone-c`);
+    }
     const deployerKey = readFileSync(keysFile, "utf8").match(
       /^L2_DEPLOYER_PRIVATE_KEY='?(0x[0-9a-fA-F]+)'?$/m,
     )![1] as Hex;
