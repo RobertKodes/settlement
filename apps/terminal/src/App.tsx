@@ -3,7 +3,7 @@ import { CommandLine } from "./components/CommandLine.js";
 import { Palette, type PaletteItem } from "./components/Palette.js";
 import { QuorumRing } from "./components/QuorumRing.js";
 import { Rail } from "./components/Rail.js";
-import { PlanLegs, type RankedVenue, RouteSpectrum } from "./components/RouteSpectrum.js";
+import { type RankedVenue, RouteSpectrum } from "./components/RouteSpectrum.js";
 import {
   type Account,
   api,
@@ -64,7 +64,7 @@ export function App() {
   const [palette, setPalette] = useState(false);
   const [health, setHealth] = useState<{ l2?: string; l1?: string; ok: boolean }>({ ok: false });
   const [systems, setSystems] = useState<SystemsView>();
-  const [plans, setPlans] = useState<PlanView[]>([]);
+  const [_plans, setPlans] = useState<PlanView[]>([]);
   const [clock, setClock] = useState(new Date());
   const toastTimer = useRef<number>(0);
   const [log, setLog] = useState<Array<{ t: string; text: string; bad: boolean }>>([]);
@@ -314,7 +314,7 @@ export function App() {
     [account, say],
   );
 
-  const pendingApprovals = useRef<string[]>([]);
+  const _pendingApprovals = useRef<string[]>([]);
 
   const onCommand = useCallback(
     async (line: string) => {
@@ -687,8 +687,8 @@ export function App() {
             <div>
               <h2>Policy</h2>
               <ul>
-                {policyChecks.map((c, i) => (
-                  <li key={i} className={c.ok ? "ok" : c.wait ? "wait" : "no"}>
+                {policyChecks.map((c) => (
+                  <li key={c.text} className={c.ok ? "ok" : c.wait ? "wait" : "no"}>
                     {c.text}
                   </li>
                 ))}
@@ -752,8 +752,8 @@ export function App() {
           <div className="hair" />
           <h2>Activity</h2>
           <ul id="activity" className="activity">
-            {log.map((l, i) => (
-              <li key={`${l.t}-${i}`} className={l.bad ? "bad" : ""}>
+            {log.map((l) => (
+              <li key={`${l.t}-${l.text}`} className={l.bad ? "bad" : ""}>
                 <span className="dimmer">{hhmmss(l.t).slice(0, 8)}</span> {l.text}
               </li>
             ))}

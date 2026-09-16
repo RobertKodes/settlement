@@ -11,7 +11,7 @@ export function Palette({ items, onClose }: { items: PaletteItem[]; onClose: () 
   const [q, setQ] = useState("");
   const [sel, setSel] = useState(0);
   const list = items.filter((i) => i.label.toLowerCase().includes(q.toLowerCase()));
-  useEffect(() => setSel(0), [q]);
+  useEffect(() => setSel(0), []);
   return (
     <div className="palette" onClick={onClose} role="dialog">
       <div className="box" onClick={(e) => e.stopPropagation()}>

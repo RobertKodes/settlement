@@ -19,7 +19,6 @@ import { PgAccountRepository } from "../src/repos/accounts.js";
 import { PgIdempotencyStore } from "../src/repos/idempotency.js";
 import { PgIntentRepository } from "../src/repos/intents.js";
 import { PgSignatureRepository } from "../src/repos/signatures.js";
-import { loadSystems } from "../src/systems.js";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const DATABASE_URL =

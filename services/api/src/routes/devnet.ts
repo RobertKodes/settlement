@@ -19,7 +19,7 @@ export function registerDevnetRoutes(
   app.post("/v1/devnet/faucet", async (req) => {
     const parsed = FaucetSchema.safeParse(req.body);
     if (!parsed.success) throw errors.validation({ issues: parsed.error.issues });
-    if (!deps.engine || deps.engine.chainId !== 1337)
+    if (deps.engine?.chainId !== 1337)
       throw errors.unsupported("faucet exists only on the local devnet");
     const acct = await deps.accounts.byHandle(parsed.data.handle);
     if (!acct) throw errors.notFound("account");

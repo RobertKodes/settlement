@@ -77,7 +77,7 @@ export function serializePlan(p: RoutePlan): SwapPlanDraft["plan"] {
   };
 }
 
-const PERMIT_DEADLINE = (1n << 256n) - 1n;
+const _PERMIT_DEADLINE = (1n << 256n) - 1n;
 
 /** Builds the unsigned account operation for a single Lineth pool-swap leg (venue-v2 or StableSwap). */
 export async function buildLinethSwapOp(
