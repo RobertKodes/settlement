@@ -17,9 +17,9 @@ Nothing here runs on a public network yet.
 | 2 venue contracts | done on the devnet | `VenueFactory/Pair/Router`, 5 tests incl. graduation + fuzz; deployed by `make devnet-deploy`; `make arc-deploy` ready |
 | 3 router v2 | done | `RoutePlan`/legs, venue-v2 / CCTP / StableFX / Metapad-curve adapters, planner (10 tests); `POST /v1/routes/plan`, `GET /v1/systems` |
 | 4 real Circle clients | done (sandbox/testnet, gated) | `ArcRpcAdapter` (live read verified on Arc Testnet), `CctpV2Client` (IRIS v2 parsing tested; live legs need funded keys), `BridgeFiatProvider` (fetch-mocked; needs credentials) |
-| 5 API plans per leg | partial | plans and BLOCKED reasons exposed; leg-by-leg execution of multi-system plans not yet wired (single-chain legs execute as before) |
+| 5 API plans per leg | done for single-system plans | swap quotes go through the planner (`quoteSwapPlan`); `engine/plan-executor.ts` builds the Lineth leg and states per-leg executability; multi-system plans are returned with BLOCKED reasons until Arc/CCTP keys exist |
 | 6 Bridge client | done (typed, gated) | see 4 |
-| 7 terminal | pending | systems/legs view |
+| 7 terminal | done | systems strip (LINETH / ARC / CCTP / STABLEFX state) and plan legs with BLOCKED reasons in the route view |
 | 8 Arc deployment | **awaiting funding** | deployer `0xA619669f69E500353C7cd7A508232043Dc416fEd`, fund at https://faucet.circle.com, then `make arc-deploy` |
 
 ## Milestones (section 39)

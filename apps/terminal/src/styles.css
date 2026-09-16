@@ -618,3 +618,52 @@ kbd {
 .activity li.bad {
   color: var(--bad);
 }
+
+/* plans across systems */
+.plans .plan {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+.plans .plan.live {
+  border-color: rgba(140, 245, 194, 0.35);
+}
+.plans .plan-head {
+  display: flex;
+  justify-content: space-between;
+  font: 12px var(--mono);
+  margin-bottom: 6px;
+}
+.plans .leg {
+  display: grid;
+  grid-template-columns: 64px 140px 1fr 40px;
+  gap: 8px;
+  font: 11px / 1.8 var(--mono);
+  align-items: baseline;
+}
+.plans .leg .sys {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+}
+.plans .leg.dead {
+  opacity: 0.75;
+}
+.plans .leg .bad {
+  grid-column: 1 / -1;
+  font-size: 10.5px;
+}
+.systems {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font: 11px var(--mono);
+  color: var(--ink-3);
+}
+.systems .on {
+  color: var(--accent);
+}
+.systems .blk {
+  color: var(--warn);
+}

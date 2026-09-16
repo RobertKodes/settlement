@@ -97,7 +97,58 @@ export interface Receipt {
   finalizedL2Block?: string;
 }
 
+export interface SystemsView {
+  lineth: {
+    chainId?: number;
+    entryPoint: string;
+    dvp?: string;
+    venueRouter?: string;
+    pool?: string;
+  } | null;
+  arc: {
+    chainId: number;
+    rpc: string;
+    usdc: string;
+    eurc: string;
+    deployments: Record<string, string> | null;
+    stableFx: string;
+    cctpDomain: number;
+  } | null;
+  blocked: string[];
+}
+export interface PlanView {
+  id: string;
+  executable: boolean;
+  blocked: string[];
+  score: number;
+  amountOut: string;
+  totalLatencySeconds: number;
+  certainty: number;
+  legs: Array<{
+    id: string;
+    system: string;
+    kind: string;
+    venue?: string;
+    chainId?: number;
+    assetIn: string;
+    assetOut: string;
+    amountIn: string;
+    amountOut: string;
+    executable: boolean;
+    blockedReason?: string;
+    latencySeconds: number;
+  }>;
+}
+
 export const api = {
+  systems: () => call<SystemsView>("GET", "/v1/systems"),
+  plan: (p: {
+    assetIn: string;
+    assetOut: string;
+    amountIn: string;
+    fromChainId: number;
+    toChainId: number;
+  }) => call<PlanView[]>("POST", "/v1/routes/plan", p),
   health: () =>
     call<{
       status: string;

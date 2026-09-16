@@ -34,6 +34,8 @@ const chain = devnetChainDeps(repoRoot, {
 });
 
 const systems = loadSystems(repoRoot, chain);
+const engine = chain ? new ExecutionEngine(chain) : undefined;
+if (engine) engine.planner = systems.planner;
 
 const app = buildApp({
   logger: true,
@@ -50,7 +52,7 @@ const app = buildApp({
     repo: new PgFiatRepository(db, () => usdcAssetId(db, chain?.usdc)),
   },
   signatures: new PgSignatureRepository(db),
-  ...(chain ? { engine: new ExecutionEngine(chain) } : {}),
+  ...(engine ? { engine } : {}),
   chains: [
     { name: "l1", rpcUrl: env.L1_RPC_URL, expectedChainId: env.L1_CHAIN_ID },
     { name: "l2", rpcUrl: env.L2_RPC_URL, expectedChainId: env.L2_CHAIN_ID },

@@ -1,5 +1,5 @@
 import type { PublicClient } from "@settlement/chain";
-import { venueRouterAbi } from "@settlement/contracts-abi";
+import { stableSwapPoolAbi, venueRouterAbi } from "@settlement/contracts-abi";
 import type { Address } from "viem";
 import type { Leg } from "./plan.js";
 
@@ -229,4 +229,62 @@ export function curveLeg(
     ...(p.deployed ? {} : { blockedReason: "Metapad launchpad not deployed on this chain" }),
     params: { launchpad: p.launchpad, graduates },
   };
+}
+
+/** Our StableSwap on the Lineth rollup as a plan leg (internal liquidity venue, Milestone D). */
+export async function stableSwapLeg(
+  client: PublicClient,
+  cfg: { pool: Address; coins: Record<string, number> },
+  chainId: number,
+  id: string,
+  assetIn: string,
+  assetOut: string,
+  amountIn: bigint,
+  maxSlippageBps = 50,
+): Promise<Leg | undefined> {
+  const i = cfg.coins[assetIn];
+  const j = cfg.coins[assetOut];
+  if (i === undefined || j === undefined || i === j) return undefined;
+  try {
+    const [dy, dyFee] = await client.readContract({
+      address: cfg.pool,
+      abi: stableSwapPoolAbi,
+      functionName: "getDy",
+      args: [BigInt(i), BigInt(j), amountIn],
+    });
+    return {
+      id,
+      system: "lineth",
+      kind: "pool-swap",
+      chainId,
+      venue: "native-stableswap",
+      assetIn,
+      amountIn,
+      assetOut,
+      amountOut: dy,
+      minAmountOut: (dy * (10_000n - BigInt(maxSlippageBps))) / 10_000n,
+      feeBaseUnits: dyFee,
+      latencySeconds: 3,
+      settlementCertainty: 0.999,
+      executable: true,
+      params: { pool: cfg.pool, i, j },
+    };
+  } catch (e) {
+    return {
+      id,
+      system: "lineth",
+      kind: "pool-swap",
+      chainId,
+      venue: "native-stableswap",
+      assetIn,
+      amountIn,
+      assetOut,
+      amountOut: 0n,
+      feeBaseUnits: 0n,
+      latencySeconds: 0,
+      settlementCertainty: 0,
+      executable: false,
+      blockedReason: `stableswap unreachable: ${(e as Error).message.slice(0, 80)}`,
+    };
+  }
 }

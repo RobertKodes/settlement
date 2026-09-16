@@ -22,6 +22,7 @@ import {
 } from "@settlement/router";
 import type { Intent } from "@settlement/types";
 import { type Address, encodeFunctionData, type Hex, size } from "viem";
+import type { SwapPlanDraft as _SPD } from "./engine/plan-executor.js";
 import type { ChainDeps, QuoteDraft } from "./execution.js";
 import { serializeOp } from "./execution.js";
 import type { AccountRecord } from "./repos/accounts.js";

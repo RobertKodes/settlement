@@ -19,6 +19,7 @@ import { PgAccountRepository } from "../src/repos/accounts.js";
 import { PgIdempotencyStore } from "../src/repos/idempotency.js";
 import { PgIntentRepository } from "../src/repos/intents.js";
 import { PgSignatureRepository } from "../src/repos/signatures.js";
+import { loadSystems } from "../src/systems.js";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const DATABASE_URL =
@@ -195,8 +196,8 @@ describe.skipIf(!enabled || !chain?.pool)(
         ranked: Array<{ venue: string; executable: boolean }>;
         output: { amountBaseUnits: string };
       };
-      expect(draft.route[0]?.venue).toBe("native-stableswap");
-      expect(draft.ranked.map((r) => r.venue)).toContain("arc-stablefx");
+      expect(["lineth-venue", "native-stableswap"]).toContain(draft.route[0]?.venue);
+      expect(draft.ranked.map((r) => r.venue).join(",")).toMatch(/arc-stablefx/);
       expect(BigInt(draft.output.amountBaseUnits)).toBeGreaterThan(parseUnits("990", 6));
 
       const permitSignature = carol.sign(draft.digests.permit);
@@ -226,7 +227,7 @@ describe.skipIf(!enabled || !chain?.pool)(
 
       const receipt = await app.inject({ method: "GET", url: `/v1/settlements/${intentId}` });
       expect(receipt.statusCode, receipt.body).toBe(200);
-      expect(receipt.json().route[0].venue).toBe("native-stableswap");
+      expect(["lineth-venue", "native-stableswap"]).toContain(receipt.json().route[0].venue);
       expect(receipt.json().legs).toHaveLength(2);
       const perAsset = await db<
         { asset_id: string; s: string }[]

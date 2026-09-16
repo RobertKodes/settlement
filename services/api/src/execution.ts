@@ -87,6 +87,8 @@ const USDC_DECIMALS = 6;
 const PERMIT_DEADLINE = (1n << 256n) - 1n;
 
 export class ExecutionEngine {
+  /** Architecture v2: when set, swap quotes go through the multi-system planner. */
+  planner?: import("@settlement/router").PlannerConfig;
   constructor(private readonly deps: ChainDeps) {}
 
   get chainId(): number {

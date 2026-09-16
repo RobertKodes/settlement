@@ -3,14 +3,16 @@ import { CommandLine } from "./components/CommandLine.js";
 import { Palette, type PaletteItem } from "./components/Palette.js";
 import { QuorumRing } from "./components/QuorumRing.js";
 import { Rail } from "./components/Rail.js";
-import { type RankedVenue, RouteSpectrum } from "./components/RouteSpectrum.js";
+import { PlanLegs, type RankedVenue, RouteSpectrum } from "./components/RouteSpectrum.js";
 import {
   type Account,
   api,
   type IntentView,
+  type PlanView,
   type Portfolio,
   type Receipt,
   RequestError,
+  type SystemsView,
 } from "./lib/api.js";
 import { hhmmss, toBase, units } from "./lib/format.js";
 import { deviceKeys } from "./lib/signer.js";
@@ -61,6 +63,8 @@ export function App() {
   const [toast, setToast] = useState<{ text: string; bad?: boolean }>();
   const [palette, setPalette] = useState(false);
   const [health, setHealth] = useState<{ l2?: string; l1?: string; ok: boolean }>({ ok: false });
+  const [systems, setSystems] = useState<SystemsView>();
+  const [plans, setPlans] = useState<PlanView[]>([]);
   const [clock, setClock] = useState(new Date());
   const toastTimer = useRef<number>(0);
   const [log, setLog] = useState<Array<{ t: string; text: string; bad: boolean }>>([]);
@@ -112,6 +116,33 @@ export function App() {
       window.clearInterval(h);
     };
   }, []);
+
+  useEffect(() => {
+    api
+      .systems()
+      .then(setSystems)
+      .catch(() => setSystems(undefined));
+  }, []);
+
+  useEffect(() => {
+    if (draft.action !== "swap" || !draft.amount || draft.asset === draft.toAsset) {
+      setPlans([]);
+      return;
+    }
+    const t = window.setTimeout(() => {
+      api
+        .plan({
+          assetIn: draft.asset,
+          assetOut: draft.toAsset,
+          amountIn: toBase(draft.amount, 6),
+          fromChainId: 1337,
+          toChainId: 1337,
+        })
+        .then(setPlans)
+        .catch(() => setPlans([]));
+    }, 350);
+    return () => window.clearTimeout(t);
+  }, [draft.action, draft.amount, draft.asset, draft.toAsset]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -486,7 +517,16 @@ export function App() {
         <span className="dim">L2 {health.l2 ?? "—"}</span>
         <span className="dim">L1 {health.l1 ?? "—"}</span>
         <span className="sep" />
-        <span className="dim">USDC-native · Lineth · proofs → Ethereum</span>
+        <span className="systems">
+          <span className={systems?.lineth ? "on" : ""}>LINETH{systems?.lineth ? "" : " off"}</span>
+          <span className={systems?.arc?.deployments ? "on" : "blk"}>
+            ARC{systems?.arc?.deployments ? "" : " · not deployed"}
+          </span>
+          <span className="blk">CCTP · rollup domain pending</span>
+          <span className={systems?.arc?.stableFx === "configured" ? "on" : "blk"}>
+            STABLEFX{systems?.arc?.stableFx === "configured" ? "" : " · key pending"}
+          </span>
+        </span>
         <span style={{ marginLeft: "auto" }} className="dim">
           {clock.toLocaleTimeString("en-GB", { hour12: false })}
         </span>
