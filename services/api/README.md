@@ -24,6 +24,11 @@ Fastify + zod, conventions in `docs/api/conventions.md` (ADR-0024). Persistence 
 | `GET` | `/v1/fiat/transfers/:provider/:id` | our record + the provider's live state |
 | `POST` | `/v1/reconciliation/run` | ledger `available` balances vs on-chain balances (`{accountId}` to scope); writes `reconciliation_run` |
 | `GET` | `/v1/reconciliation/runs` | last 20 runs with breaks |
+| `GET` | `/v1/systems` | what the orchestration layer reaches (Lineth, Arc, CCTP domains) and the BLOCKED list (v2) |
+| `POST` | `/v1/routes/plan` | candidate plans with legs across Lineth / Arc / CCTP, scores and BLOCKED reasons (v2) |
+| `GET` | `/v1/accounts/:handle/portfolio` | unified account with provenance per line |
+| `GET` | `/v1/accounts/:handle/intents` | the account's intents, newest first |
+| `POST` | `/v1/devnet/faucet` | devnet only: mint test stablecoins |
 | `GET` | `/v1/settlements/:intentId` | settlement receipt (blueprint section 10) with live L1 finality; moves `SETTLED → PROVEN` |
 
 The passkey signs exactly two digests, both returned by the API: the permit (fee allowance for the
