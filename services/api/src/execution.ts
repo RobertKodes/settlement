@@ -43,6 +43,9 @@ export interface ChainDeps {
   pool?: Address;
   /** Milestone F: DvPSettlement contract, when deployed. */
   dvp?: Address;
+  /** Architecture v2: our UniswapV2-compatible venue on this chain. */
+  venueRouter?: Address;
+  venueFactory?: Address;
 }
 
 /** JSON- and database-safe form of PackedUserOperation (bigints as decimal strings). */

@@ -1,6 +1,6 @@
 # ADR-0018: Arc adapter design
 
-- **Status:** Accepted
+- **Status:** Accepted (v2: Arc is a real dependency — RPC adapter live, venue deployable, StableFX gated)
 - **Date:** 2026-09-16
 - **Blueprint refs:** sections 4, 5, 38.18
 
@@ -19,3 +19,6 @@ Arc is Circle's own L1 for stablecoin finance, EVM-compatible (Osaka baseline), 
 - https://docs.arc.io/arc/references/connect-to-arc
 - https://docs.arc.io/arc/references/evm-differences
 - https://developers.circle.com/stablefx
+
+## Architecture v2 note (2026-09-16)
+ArcRpcAdapter reads Arc Testnet live (6/18-decimal separation). Our UniswapV2-compatible venue deploys with `make arc-deploy` once the deployer is funded; StableFX (permissioned RFQ + FxEscrow 0xe2E5…DFe6) waits for an institutional API key.

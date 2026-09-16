@@ -20,8 +20,10 @@ import { registerFiatRoutes } from "./routes/fiat.js";
 import { type ChainProbe, registerHealthRoutes } from "./routes/health.js";
 import { registerIntentRoutes } from "./routes/intents.js";
 import { registerPortfolioRoutes } from "./routes/portfolio.js";
+import { registerRouteRoutes } from "./routes/routes.js";
 import { registerSettleRoutes } from "./routes/settle.js";
 import { registerSettlementRoutes } from "./routes/settlements.js";
+import type { Systems } from "./systems.js";
 
 export interface AppDeps {
   intents?: IntentRepository;
@@ -32,6 +34,7 @@ export interface AppDeps {
   policies?: PolicyRepository;
   signatures?: SignatureRepository;
   fiat?: { provider: FiatProvider; repo: FiatRepository };
+  systems?: Systems;
   db?: Db;
   chains?: ChainProbe[];
   logger?: boolean;
@@ -128,6 +131,7 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
     ...(deps.db ? { db: deps.db } : {}),
     ...(deps.engine ? { chain: deps.engine.chainDeps } : {}),
   });
+  registerRouteRoutes(app, { ...(deps.systems ? { systems: deps.systems } : {}) });
   registerDevnetRoutes(app, { accounts, ...(deps.engine ? { engine: deps.engine } : {}) });
   registerPortfolioRoutes(app, {
     accounts,

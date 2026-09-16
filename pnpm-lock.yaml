@@ -172,6 +172,12 @@ importers:
       '@settlement/contracts-abi':
         specifier: workspace:*
         version: link:../../packages/contracts-abi
+      '@settlement/integration-arc':
+        specifier: workspace:*
+        version: link:../../integrations/circle/arc
+      '@settlement/integration-cctp':
+        specifier: workspace:*
+        version: link:../../integrations/circle/cctp
       '@settlement/integration-fiat':
         specifier: workspace:*
         version: link:../../integrations/fiat

@@ -13,6 +13,7 @@ import { PgAccountRepository } from "./repos/accounts.js";
 import { PgIdempotencyStore } from "./repos/idempotency.js";
 import { PgIntentRepository } from "./repos/intents.js";
 import { PgSignatureRepository } from "./repos/signatures.js";
+import { loadSystems } from "./systems.js";
 
 const env = loadEnv();
 
@@ -32,8 +33,11 @@ const chain = devnetChainDeps(repoRoot, {
     : {}),
 });
 
+const systems = loadSystems(repoRoot, chain);
+
 const app = buildApp({
   logger: true,
+  systems,
   intents: new PgIntentRepository(db),
   accounts: new PgAccountRepository(db),
   idempotency: new PgIdempotencyStore(db),

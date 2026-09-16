@@ -54,5 +54,7 @@ export function devnetChainDeps(
     ...(contracts.TestEURC ? { eurc: contracts.TestEURC } : {}),
     ...(contracts.StableSwapPool ? { pool: contracts.StableSwapPool } : {}),
     ...(contracts.DvPSettlement ? { dvp: contracts.DvPSettlement } : {}),
+    ...(contracts.VenueRouter ? { venueRouter: contracts.VenueRouter } : {}),
+    ...(contracts.VenueFactory ? { venueFactory: contracts.VenueFactory } : {}),
   };
 }

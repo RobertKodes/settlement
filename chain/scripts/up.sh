@@ -25,6 +25,12 @@ if [ "${DEVNET_FRESH:-0}" != 1 ] && [ -s "$RESUME_FILE" ] && [ -f "$STACK_DIR/.e
     info "resuming $(wc -l < "$RESUME_FILE" | tr -d ' ') recorded services (state kept)"
     # shellcheck disable=SC2046
     compose_all start $(cat "$RESUME_FILE")
+    sleep 15
+    # A service can lose its peer during the staggered start (Maru's socket to the sequencer): start it again.
+    for svc in $(cat "$RESUME_FILE"); do
+      st=$(compose_all ps -a --format '{{.Service}} {{.State}}' 2>/dev/null | awk -v s="$svc" '$1==s{print $2}')
+      if [ "$st" = "exited" ]; then warn "$svc exited during resume; starting it again"; compose_all start "$svc" >/dev/null 2>&1 || true; fi
+    done
     wait_for_rpcs
     bash "$(dirname "${BASH_SOURCE[0]}")/status.sh"
     exit 0

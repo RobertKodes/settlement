@@ -1,6 +1,6 @@
 # ADR-0017: Cross-chain abstraction: CCTP V2 and Gateway
 
-- **Status:** Accepted
+- **Status:** Accepted (v2: CCTP V2 client implemented against the sandbox; Lineth rollup still has no domain)
 - **Date:** 2026-09-16
 - **Blueprint refs:** sections 4, 8, 38.17
 
@@ -24,3 +24,6 @@
 - https://developers.circle.com/cctp/evm-smart-contracts
 - https://developers.circle.com/cctp/concepts/finality-and-block-confirmations
 - https://developers.circle.com/gateway/references/technical-guide
+
+## Architecture v2 note (2026-09-16)
+CctpV2Client in integrations/circle/cctp (burn, IRIS v2 attestation polling, mint). Live legs need funded keys on two CCTP chains; the Lineth rollup's legs are BLOCKED by design until Circle grants a domain.

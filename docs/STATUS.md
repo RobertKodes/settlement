@@ -9,6 +9,19 @@ The record of what exists, what is verified, and what is blocked, per blueprint 
 milestone (section 39). "Verified" means a test or a scripted run passed on the local devnet today.
 Nothing here runs on a public network yet.
 
+## Architecture v2 progress (2026-09-16, evening)
+
+| step (ARCHITECTURE_V2 §6) | status | evidence |
+|---|---|---|
+| 1 docs | done | `docs/ARCHITECTURE_V2.md` |
+| 2 venue contracts | done on the devnet | `VenueFactory/Pair/Router`, 5 tests incl. graduation + fuzz; deployed by `make devnet-deploy`; `make arc-deploy` ready |
+| 3 router v2 | done | `RoutePlan`/legs, venue-v2 / CCTP / StableFX / Metapad-curve adapters, planner (10 tests); `POST /v1/routes/plan`, `GET /v1/systems` |
+| 4 real Circle clients | done (sandbox/testnet, gated) | `ArcRpcAdapter` (live read verified on Arc Testnet), `CctpV2Client` (IRIS v2 parsing tested; live legs need funded keys), `BridgeFiatProvider` (fetch-mocked; needs credentials) |
+| 5 API plans per leg | partial | plans and BLOCKED reasons exposed; leg-by-leg execution of multi-system plans not yet wired (single-chain legs execute as before) |
+| 6 Bridge client | done (typed, gated) | see 4 |
+| 7 terminal | pending | systems/legs view |
+| 8 Arc deployment | **awaiting funding** | deployer `0xA619669f69E500353C7cd7A508232043Dc416fEd`, fund at https://faucet.circle.com, then `make arc-deploy` |
+
 ## Milestones (section 39)
 
 | milestone | definition | status | evidence |

@@ -110,3 +110,32 @@ describe("POST /v1/intents", () => {
     await degraded.close();
   });
 });
+
+describe("systems and route plans", () => {
+  it("reports BLOCKED systems and plans routes with reasons, without any chain configured", async () => {
+    const { loadSystems } = await import("../src/systems.js");
+    const systems = loadSystems("/nonexistent", undefined, { ARC_ENABLED: "0" });
+    const app = buildApp({ systems });
+    const s = await app.inject({ method: "GET", url: "/v1/systems" });
+    expect(s.json().lineth).toBeNull();
+    expect(s.json().blocked.join(" | ")).toMatch(/arc contracts not deployed/);
+    expect(s.json().blocked.join(" | ")).toMatch(/no CCTP domain/);
+    const plan = await app.inject({
+      method: "POST",
+      url: "/v1/routes/plan",
+      payload: {
+        assetIn: "USDC",
+        assetOut: "EURC",
+        amountIn: "1000000000",
+        fromChainId: 1337,
+        toChainId: 5042002,
+      },
+    });
+    expect(plan.statusCode, plan.body).toBe(200);
+    const via = plan.json().find((p: { id: string }) => p.id === "via-arc-stablefx");
+    expect(via.executable).toBe(false);
+    expect(via.legs.map((l: { system: string }) => l.system)).toEqual(["cctp", "arc"]);
+    expect(via.blocked[0]).toMatch(/no CCTP domain for chain 1337/);
+    await app.close();
+  });
+});
