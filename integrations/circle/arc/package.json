@@ -21,6 +21,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@settlement/config": "workspace:*"
+    "@settlement/config": "workspace:*",
+    "@settlement/chain": "workspace:*",
+    "@settlement/contracts-abi": "workspace:*",
+    "viem": "^2.37.0"
   }
 }

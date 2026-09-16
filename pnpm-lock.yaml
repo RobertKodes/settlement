@@ -60,15 +60,30 @@ importers:
 
   integrations/circle/arc:
     dependencies:
+      '@settlement/chain':
+        specifier: workspace:*
+        version: link:../../../packages/chain
       '@settlement/config':
         specifier: workspace:*
         version: link:../../../packages/config
+      '@settlement/contracts-abi':
+        specifier: workspace:*
+        version: link:../../../packages/contracts-abi
+      viem:
+        specifier: ^2.37.0
+        version: 2.56.5(typescript@5.9.3)(zod@4.6.5)
 
   integrations/circle/cctp:
     dependencies:
+      '@settlement/chain':
+        specifier: workspace:*
+        version: link:../../../packages/chain
       '@settlement/config':
         specifier: workspace:*
         version: link:../../../packages/config
+      viem:
+        specifier: ^2.37.0
+        version: 2.56.5(typescript@5.9.3)(zod@4.6.5)
 
   integrations/circle/gateway:
     dependencies:
@@ -76,7 +91,11 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/config
 
-  integrations/fiat: {}
+  integrations/fiat:
+    dependencies:
+      zod:
+        specifier: ^4.1.0
+        version: 4.6.5
 
   packages/chain:
     dependencies:

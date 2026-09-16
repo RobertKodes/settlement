@@ -26,3 +26,4 @@ protocol/contracts/broadcast/
 .idea/
 .vscode/
 chain/lineth/deployments.local.json
+chain/arc/deployer.env

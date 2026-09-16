@@ -12,7 +12,7 @@ key=$(sed -n "s/^L2_DEPLOYER_PRIVATE_KEY='\{0,1\}\(0x[0-9a-fA-F]*\)'\{0,1\}$/\1/
 
 out="$LINETH_DIR/deployments.local.json"
 info "deploying DeployDevnet.s.sol to $L2_HOST_RPC_URL (chain $L2_CHAIN_ID)"
-( cd "$REPO_ROOT/protocol/contracts" && DEPLOYER_KEY="$key" forge script script/DeployDevnet.s.sol --rpc-url "$L2_HOST_RPC_URL" --broadcast --private-key "$key" >/tmp/devnet-deploy.log 2>&1 ) \
+( cd "$REPO_ROOT/protocol/contracts" && DEPLOYER_KEY="$key" forge script script/DeployDevnet.s.sol --rpc-url "$L2_HOST_RPC_URL" --broadcast --private-key "$key" --with-gas-price 2gwei --priority-gas-price 1gwei >/tmp/devnet-deploy.log 2>&1 ) \
   || { tail -20 /tmp/devnet-deploy.log; die "forge script failed (log: /tmp/devnet-deploy.log)"; }
 python3 - "$REPO_ROOT/protocol/contracts/broadcast/DeployDevnet.s.sol/$L2_CHAIN_ID/run-latest.json" "$out" "$L2_CHAIN_ID" <<'PY'
 import json, sys, datetime

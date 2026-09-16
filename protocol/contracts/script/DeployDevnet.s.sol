@@ -6,6 +6,8 @@ import {NetworkVersion} from "../src/NetworkVersion.sol";
 import {TestUSDC, TestEURC} from "../src/TestUSDC.sol";
 import {StableSwapPool} from "../src/dex/StableSwapPool.sol";
 import {DvPSettlement} from "../src/settlement/DvPSettlement.sol";
+import {VenueFactory} from "../src/venue/VenueFactory.sol";
+import {VenueRouter} from "../src/venue/VenueRouter.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @dev Devnet-only bundle: NetworkVersion + TestUSDC (minted to the deployer). Run through
@@ -28,7 +30,24 @@ contract DeployDevnet is Script {
         eurc.approve(address(pool), 5_000_000e6);
         pool.addLiquidity([uint256(5_000_000e6), uint256(5_000_000e6)], 0, type(uint256).max);
         DvPSettlement dvp = new DvPSettlement();
+        // The venue (UniswapV2-compatible) with a seeded USDC/EURC pair, so graduation and V2 routing can be exercised locally.
+        VenueFactory venue = new VenueFactory(deployer);
+        VenueRouter venueRouter = new VenueRouter(venue);
+        usdc.approve(address(venueRouter), 1_000_000e6);
+        eurc.approve(address(venueRouter), 1_000_000e6);
+        venueRouter.addLiquidity(
+            address(usdc),
+            address(eurc),
+            1_000_000e6,
+            1_000_000e6,
+            0,
+            0,
+            deployer,
+            type(uint256).max
+        );
         vm.stopBroadcast();
+        console.log("VenueFactory", address(venue));
+        console.log("VenueRouter", address(venueRouter));
         console.log("DvPSettlement", address(dvp));
         console.log("NetworkVersion", address(nv));
         console.log("TestUSDC", address(usdc));

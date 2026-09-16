@@ -9,7 +9,7 @@ CHAIN_SCRIPTS := chain/scripts
 FORGE ?= $(shell command -v forge 2>/dev/null || echo $(HOME)/.foundry/bin/forge)
 
 .PHONY: help doctor bootstrap install build lint lint-fix typecheck test forge-build forge-test \
-        devnet-bootstrap devnet-preflight devnet-up devnet-status devnet-logs devnet-down devnet-reset devnet-deploy devnet-milestone-c \
+        devnet-bootstrap devnet-preflight devnet-up devnet-status devnet-logs devnet-down devnet-reset devnet-deploy devnet-milestone-c arc-key arc-deploy arc-status \
         services-up services-down ledger-migrate adr-new check-name
 
 help: ## Show this help
@@ -73,6 +73,15 @@ devnet-deploy: ## Deploy NetworkVersion + TestUSDC to the running L2, record cha
 
 devnet-milestone-c: ## Milestone C on the devnet: passkey account + USDC-paid gas via EntryPoint v0.8
 	@bash $(CHAIN_SCRIPTS)/milestone_c.sh
+
+arc-key: ## Generate the Arc Testnet deployer (fund it at faucet.circle.com)
+	@bash $(CHAIN_SCRIPTS)/arc.sh key
+
+arc-deploy: ## Deploy venue + accounts + DvP on Arc Testnet -> chain/deployments/arc-testnet.json
+	@bash $(CHAIN_SCRIPTS)/arc.sh deploy
+
+arc-status: ## Arc Testnet head, deployer balance, deployed addresses
+	@bash $(CHAIN_SCRIPTS)/arc.sh status
 
 services-up: ## Postgres 16 + Redis 7 for the ledger (infra/docker/compose.services.yml)
 	docker compose -f infra/docker/compose.services.yml up -d --wait

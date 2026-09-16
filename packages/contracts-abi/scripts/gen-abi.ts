@@ -22,6 +22,9 @@ const contracts = [
   "NetworkVersion",
   "StableSwapPool",
   "DvPSettlement",
+  "VenueFactory",
+  "VenuePair",
+  "VenueRouter",
 ];
 const exportsList: string[] = [];
 for (const name of contracts) {
