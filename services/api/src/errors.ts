@@ -26,4 +26,12 @@ export const errors = {
       "Idempotency-Key was already used with a different payload",
     ),
   notFound: (what: string) => new ApiError(404, "not_found", `${what} not found`),
+  conflict: (message: string) => new ApiError(409, "conflict", message),
+  illegalTransition: (from: string, to: string) =>
+    new ApiError(409, "illegal_transition", `intent cannot move from ${from} to ${to}`),
+  unsupported: (message: string) => new ApiError(422, "unsupported_intent", message),
+  policyDenied: (message: string, details?: Record<string, unknown>) =>
+    new ApiError(422, "policy_denied", message, details),
+  executionFailed: (message: string, details?: Record<string, unknown>) =>
+    new ApiError(502, "execution_failed", message, details),
 };

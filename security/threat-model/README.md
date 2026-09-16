@@ -26,6 +26,8 @@ not done until this table is updated (blueprint section 34).
 | accounts | passkey compromise, session theft | auth | WebAuthn, device binding, MFA for institutions, session revocation | planned | 0008 |
 | accounts | user-op signature forgery / replay | PasskeyAccount | P-256 over the EntryPoint v0.8 typed-data hash (chain id + entry point in the domain), EntryPoint nonces; wrong-key op rejected in tests | partial | 0008 |
 | accounts | ERC-1271 cross-context replay | PasskeyAccount | per-account key today; ERC-7739 rehashing before production | planned | 0008 |
+| accounts | server-side authorization bypass | services/api | the API only relays: an intent executes solely with the passkey's two signatures (permit + user-op hash) returned by the quote; the bundler key cannot move user funds | done | 0008, 0024 |
+| ledger | double posting on retry | services/api ledger poster | `ledger_post` idempotency key `intent:<id>`; API-level `Idempotency-Key` on creation | done | 0015, 0024 |
 | gas | paymaster drained by over-charging or unbounded permits | USDCPaymaster | prefund capped at `maxCost` and at `permitAmount`, refund in `_postOp`, permit amount checked before pulling funds | partial | 0006 |
 | gas | stale/manipulated token price | USDCPaymaster | owner-set stub on the devnet; OracleAdapter with freshness/deviation bounds before any real value | planned | 0006, 0020 |
 | accounts | recovery abuse, privilege escalation, malicious delegate | policy engine | N-of-M approvals, new-recipient secondary approval, agent budgets, audit trail | partial (schema) | 0008 |

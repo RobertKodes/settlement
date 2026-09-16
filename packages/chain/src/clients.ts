@@ -6,8 +6,15 @@ import {
   defineChain,
   type Hex,
   http,
+  type Transport,
+  type PublicClient as ViemPublicClient,
+  type WalletClient as ViemWalletClient,
 } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+import { type PrivateKeyAccount, privateKeyToAccount } from "viem/accounts";
+
+/** Explicit client types: viem's inferred ones are not portable across workspace packages (TS2742). */
+export type PublicClient = ViemPublicClient<Transport, Chain>;
+export type WalletClient = ViemWalletClient<Transport, Chain, PrivateKeyAccount>;
 
 /** viem `Chain` from the registry entry; `rpcUrl` overrides the registry default (e.g. a container-internal URL). */
 export function toViemChain(key: ChainKey, rpcUrl?: string): Chain {
@@ -24,12 +31,12 @@ export function toViemChain(key: ChainKey, rpcUrl?: string): Chain {
   });
 }
 
-export function publicClient(key: ChainKey, rpcUrl?: string) {
+export function publicClient(key: ChainKey, rpcUrl?: string): PublicClient {
   const chain = toViemChain(key, rpcUrl);
   return createPublicClient({ chain, transport: http(chain.rpcUrls.default.http[0]) });
 }
 
-export function walletClient(key: ChainKey, privateKey: Hex, rpcUrl?: string) {
+export function walletClient(key: ChainKey, privateKey: Hex, rpcUrl?: string): WalletClient {
   const chain = toViemChain(key, rpcUrl);
   return createWalletClient({
     chain,
@@ -37,6 +44,3 @@ export function walletClient(key: ChainKey, privateKey: Hex, rpcUrl?: string) {
     transport: http(chain.rpcUrls.default.http[0]),
   });
 }
-
-export type PublicClient = ReturnType<typeof publicClient>;
-export type WalletClient = ReturnType<typeof walletClient>;

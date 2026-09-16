@@ -60,8 +60,8 @@ make test              # vitest across packages + forge test
 | `integrations/circle/{cctp,gateway,arc}/` | interfaces + in-memory mocks + tests | interfaces only |
 | `integrations/fiat/` | `FiatProvider` interface + mock; Bridge mapping | interfaces only |
 | `protocol/contracts/` | Foundry: `TestUSDC` (EIP-2612 + ERC-1271 permit), `PasskeyAccount` + factory (ERC-4337 v0.8, P-256, ERC-7821), `USDCPaymaster` (Circle-compatible permit fee flow), Milestone C tests | Milestone C |
-| `services/api/` | `@settlement/api`: Fastify `/v1/intents` (idempotency, request ids, error envelope), `/v1/health` chain probes | started |
-| `services/ledger/` | schema v1 (every blueprint section 27 entity), `ledger_post()`, migrate/smoke scripts | done |
+| `services/api/` | `@settlement/api`: accounts (passkey-bound), intents with quote/authorize/execute through the paymaster, ledger posting, settlement receipts with L1 finality; Postgres repositories; `test:devnet` end-to-end | product spine |
+| `services/ledger/` | schema v1 (every blueprint section 27 entity) + 0002 (API idempotency, wallet signer), `ledger_post()`, migrate/smoke scripts | done |
 | `infra/docker/`, `infra/ci/`, `.github/workflows/ci.yml` | services compose; CI jobs `ts`, `contracts`, `schema`, `name-check` | done |
 | `docs/architecture/`, `docs/adr/`, `docs/api/` | blueprint, 25 ADRs (10 accepted, 15 proposed), API conventions | done |
 | `security/threat-model/` | threat table with mitigation status | done |

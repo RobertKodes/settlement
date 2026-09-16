@@ -10,13 +10,17 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "dev": "tsx watch src/server.ts",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "test:devnet": "DEVNET=1 vitest run"
   },
   "dependencies": {
     "@settlement/config": "workspace:*",
     "@settlement/types": "workspace:*",
     "fastify": "^5.6.0",
     "viem": "^2.37.0",
-    "zod": "^4.1.0"
+    "zod": "^4.1.0",
+    "@settlement/chain": "workspace:*",
+    "@settlement/contracts-abi": "workspace:*",
+    "postgres": "^3.4.7"
   }
 }

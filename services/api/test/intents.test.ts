@@ -14,7 +14,6 @@ const intent = {
 };
 const headers = {
   "content-type": "application/json",
-  "x-account-id": "acct_test01",
   "idempotency-key": "k-1",
 };
 
@@ -71,6 +70,25 @@ describe("POST /v1/intents", () => {
       code: "validation_failed",
       requestId: expect.stringMatching(/^req_/),
     });
+  });
+
+  it("refuses quote and authorize without an execution chain, with stable codes", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/v1/intents",
+      headers: { ...headers, "idempotency-key": "k-4" },
+      payload: intent,
+    });
+    const id = res.json().intentId as string;
+    const q = await app.inject({ method: "POST", url: `/v1/intents/${id}/quote` });
+    expect(q.statusCode).toBe(422);
+    expect(q.json().error.code).toBe("unsupported_intent");
+    const a = await app.inject({
+      method: "POST",
+      url: `/v1/intents/${id}/authorize`,
+      payload: { permitSignature: "0x" },
+    });
+    expect(a.statusCode).toBe(422);
   });
 
   it("echoes a supplied X-Request-Id and 404s unknown intents", async () => {

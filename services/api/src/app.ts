@@ -1,19 +1,28 @@
 import { randomUUID } from "node:crypto";
 import Fastify, { type FastifyInstance } from "fastify";
 import { ApiError } from "./errors.js";
-import { type IdempotencyStore, InMemoryIdempotencyStore } from "./idempotency.js";
-import { InMemoryIntentRepository, type IntentRepository } from "./intents.js";
+import type { ExecutionEngine } from "./execution.js";
+import { InMemoryIdempotencyStore } from "./idempotency.js";
+import type { LedgerPoster } from "./ledger.js";
+import { type AccountRepository, InMemoryAccountRepository } from "./repos/accounts.js";
+import { type AsyncIdempotencyStore, asAsync } from "./repos/idempotency.js";
+import { InMemoryIntentRepository, type IntentRepository } from "./repos/intents.js";
+import { registerAccountRoutes } from "./routes/accounts.js";
 import { type ChainProbe, registerHealthRoutes } from "./routes/health.js";
 import { registerIntentRoutes } from "./routes/intents.js";
+import { registerSettlementRoutes } from "./routes/settlements.js";
 
 export interface AppDeps {
   intents?: IntentRepository;
-  idempotency?: IdempotencyStore;
+  accounts?: AccountRepository;
+  idempotency?: AsyncIdempotencyStore;
+  engine?: ExecutionEngine;
+  ledger?: LedgerPoster;
   chains?: ChainProbe[];
   logger?: boolean;
 }
 
-/** Builds the Fastify app: request ids, error envelope, routes. Kept separate from `server.ts` for tests. */
+/** Builds the Fastify app: request ids, error envelope, routes. In-memory repositories by default (tests). */
 export function buildApp(deps: AppDeps = {}): FastifyInstance {
   const app = Fastify({
     logger: deps.logger ?? false,
@@ -43,11 +52,16 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
     const status = typeof e.statusCode === "number" ? e.statusCode : 500;
     const code = status === 500 ? "internal_error" : (e.code ?? "request_error");
     req.log.error(err);
+    // Outside production the cause is surfaced so integration tests and local debugging see it.
+    const details =
+      status === 500 && process.env.NODE_ENV !== "production"
+        ? { cause: e.message ?? String(err) }
+        : {};
     return reply.status(status).send({
       error: {
         code,
         message: status === 500 ? "internal error" : (e.message ?? "request failed"),
-        details: {},
+        details,
         requestId: req.id,
       },
     });
@@ -64,10 +78,18 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
     });
   });
 
+  const intents = deps.intents ?? new InMemoryIntentRepository();
+  const accounts = deps.accounts ?? new InMemoryAccountRepository();
+  const idempotency = deps.idempotency ?? asAsync(new InMemoryIdempotencyStore());
   registerHealthRoutes(app, deps.chains ?? []);
+  registerAccountRoutes(app, { accounts, ...(deps.engine ? { engine: deps.engine } : {}) });
   registerIntentRoutes(app, {
-    intents: deps.intents ?? new InMemoryIntentRepository(),
-    idempotency: deps.idempotency ?? new InMemoryIdempotencyStore(),
+    intents,
+    accounts,
+    idempotency,
+    ...(deps.engine ? { engine: deps.engine } : {}),
+    ...(deps.ledger ? { ledger: deps.ledger } : {}),
   });
+  registerSettlementRoutes(app, { intents, ...(deps.engine ? { engine: deps.engine } : {}) });
   return app;
 }
