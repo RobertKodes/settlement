@@ -10,7 +10,9 @@ const srcDir = join(here, "..", "src");
 mkdirSync(srcDir, { recursive: true });
 
 // USDCPaymaster -> usdcPaymaster, TestUSDC -> testUSDC, EntryPoint -> entryPoint
-const camel = (n: string) => n.replace(/^[A-Z]+(?=[A-Z][a-z]|$)|^[A-Z]/, (m) => m.toLowerCase());
+const IDENT_OVERRIDES: Record<string, string> = { DvPSettlement: "dvpSettlement" };
+const camel = (n: string) =>
+  IDENT_OVERRIDES[n] ?? n.replace(/^[A-Z]+(?=[A-Z][a-z]|$)|^[A-Z]/, (m) => m.toLowerCase());
 const contracts = [
   "TestUSDC",
   "PasskeyAccount",
@@ -19,6 +21,7 @@ const contracts = [
   "EntryPoint",
   "NetworkVersion",
   "StableSwapPool",
+  "DvPSettlement",
 ];
 const exportsList: string[] = [];
 for (const name of contracts) {

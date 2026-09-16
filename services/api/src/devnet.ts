@@ -52,5 +52,6 @@ export function devnetChainDeps(
     ...(rollup ? { rollup } : {}),
     ...(contracts.TestEURC ? { eurc: contracts.TestEURC } : {}),
     ...(contracts.StableSwapPool ? { pool: contracts.StableSwapPool } : {}),
+    ...(contracts.DvPSettlement ? { dvp: contracts.DvPSettlement } : {}),
   };
 }

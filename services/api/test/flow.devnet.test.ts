@@ -14,9 +14,11 @@ import { connect, reachable } from "../src/db.js";
 import { devnetChainDeps } from "../src/devnet.js";
 import { ExecutionEngine } from "../src/execution.js";
 import { PgLedgerPoster } from "../src/ledger.js";
+import { PgPolicyRepository } from "../src/policy.js";
 import { PgAccountRepository } from "../src/repos/accounts.js";
 import { PgIdempotencyStore } from "../src/repos/idempotency.js";
 import { PgIntentRepository } from "../src/repos/intents.js";
+import { PgSignatureRepository } from "../src/repos/signatures.js";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const DATABASE_URL =
@@ -234,5 +236,180 @@ describe.skipIf(!enabled || !chain?.pool)(
         `swap ${intentId}: received ${received} EURC for 1000 USDC, fee ${settled.json().state.feeBaseUnits}`,
       );
     }, 180_000);
+  },
+);
+
+describe.skipIf(!enabled || !chain?.dvp)(
+  "devnet flow: institutional DvP with approval policy",
+  () => {
+    const db = connect(DATABASE_URL);
+    const engine = new ExecutionEngine(chain!);
+    const app = buildApp({
+      intents: new PgIntentRepository(db),
+      accounts: new PgAccountRepository(db),
+      idempotency: new PgIdempotencyStore(db),
+      ledger: new PgLedgerPoster(db),
+      policies: new PgPolicyRepository(db),
+      signatures: new PgSignatureRepository(db),
+      engine,
+    });
+    beforeAll(() => app.ready());
+    afterAll(async () => {
+      await app.close();
+      await db.end({ timeout: 2 });
+    });
+
+    it("settles asset-versus-USDC atomically after both signatures and the required approval", async () => {
+      const run = `${Date.now().toString(36)}d`;
+      const instA = Passkey.random();
+      const instB = Passkey.random();
+      const mk = async (handle: string, k: Passkey) => {
+        const res = await app.inject({
+          method: "POST",
+          url: "/v1/accounts",
+          payload: { handle, kind: "institutional", passkey: k.publicKey() },
+        });
+        expect(res.statusCode, res.body).toBe(201);
+        return res.json() as { accountId: string; address: `0x${string}` };
+      };
+      const a = await mk(`inst-a-${run}`, instA);
+      const b = await mk(`inst-b-${run}`, instB);
+      // A holds the "asset" (EURC stands in for a tokenized security), B holds USDC; B requires one approval above 500 USDC
+      for (const [token, to, amt] of [
+        [chain!.eurc!, a.address, "1000"],
+        [chain!.usdc, b.address, "1100"],
+      ] as const) {
+        const h = await chain!.bundler.writeContract({
+          address: token,
+          abi: testUSDCAbi,
+          functionName: "mint",
+          args: [to, parseUnits(amt, 6)],
+        });
+        await chain!.l2.waitForTransactionReceipt({ hash: h });
+      }
+      const pol = await app.inject({
+        method: "POST",
+        url: `/v1/accounts/inst-b-${run}/policy`,
+        payload: {
+          thresholds: [{ aboveBaseUnits: parseUnits("500", 6).toString(), approvals: 1 }],
+        },
+      });
+      expect(pol.statusCode, pol.body).toBe(200);
+
+      const created = await app.inject({
+        method: "POST",
+        url: "/v1/intents",
+        headers: { "idempotency-key": `k-${run}`, "x-account-id": a.accountId },
+        payload: {
+          action: "settle",
+          source: { asset: "EURC", amount: parseUnits("1000", 6).toString() },
+          destination: {
+            asset: "USDC",
+            recipient: `inst-b-${run}`,
+            amount: parseUnits("1050", 6).toString(),
+          },
+          constraints: { requireAtomicity: true },
+        },
+      });
+      expect(created.statusCode, created.body).toBe(201);
+      const intentId = created.json().intentId as string;
+      const quoted = await app.inject({ method: "POST", url: `/v1/intents/${intentId}/quote` });
+      expect(quoted.statusCode, quoted.body).toBe(200);
+      const draft = quoted.json().state.quote as {
+        digests: { settlement: `0x${string}`; permitA: `0x${string}`; permitB: `0x${string}` };
+      };
+
+      const sA = await app.inject({
+        method: "POST",
+        url: `/v1/intents/${intentId}/sign`,
+        payload: {
+          party: "A",
+          signature: instA.sign(draft.digests.settlement),
+          permit: instA.sign(draft.digests.permitA),
+        },
+      });
+      expect(sA.statusCode, sA.body).toBe(200);
+      const sB = await app.inject({
+        method: "POST",
+        url: `/v1/intents/${intentId}/sign`,
+        payload: {
+          party: "B",
+          signature: instB.sign(draft.digests.settlement),
+          permit: instB.sign(draft.digests.permitB),
+        },
+      });
+      expect(sB.json().signed).toEqual(["A", "B"]);
+
+      // without the approval the policy blocks execution
+      const denied = await app.inject({ method: "POST", url: `/v1/intents/${intentId}/execute` });
+      expect(denied.statusCode, denied.body).toBe(422);
+      expect(denied.json().error.code).toBe("policy_denied");
+      // FAILED_POLICY is terminal: a new intent is needed after an approval. Create, quote, sign again with the approval first.
+      const created2 = await app.inject({
+        method: "POST",
+        url: "/v1/intents",
+        headers: { "idempotency-key": `k2-${run}`, "x-account-id": a.accountId },
+        payload: created.json().intent,
+      });
+      const id2 = created2.json().intentId as string;
+      const q2 = await app.inject({ method: "POST", url: `/v1/intents/${id2}/quote` });
+      const d2 = q2.json().state.quote as {
+        digests: { settlement: `0x${string}`; permitA: `0x${string}`; permitB: `0x${string}` };
+      };
+      await app.inject({
+        method: "POST",
+        url: `/v1/intents/${id2}/sign`,
+        payload: {
+          party: "A",
+          signature: instA.sign(d2.digests.settlement),
+          permit: instA.sign(d2.digests.permitA),
+        },
+      });
+      await app.inject({
+        method: "POST",
+        url: `/v1/intents/${id2}/sign`,
+        payload: {
+          party: "B",
+          signature: instB.sign(d2.digests.settlement),
+          permit: instB.sign(d2.digests.permitB),
+        },
+      });
+      const approved = await app.inject({
+        method: "POST",
+        url: `/v1/intents/${id2}/approve`,
+        payload: { approver: "risk-officer@inst-b" },
+      });
+      expect(approved.statusCode, approved.body).toBe(200);
+      expect(approved.json().required).toBe(1);
+      const settled = await app.inject({ method: "POST", url: `/v1/intents/${id2}/execute` });
+      expect(settled.statusCode, settled.body).toBe(200);
+      expect(settled.json().status).toBe("SETTLED");
+
+      expect(
+        await chain!.l2.readContract({
+          address: chain!.eurc!,
+          abi: testUSDCAbi,
+          functionName: "balanceOf",
+          args: [b.address],
+        }),
+      ).toBe(parseUnits("1000", 6));
+      expect(
+        await chain!.l2.readContract({
+          address: chain!.usdc,
+          abi: testUSDCAbi,
+          functionName: "balanceOf",
+          args: [a.address],
+        }),
+      ).toBe(parseUnits("1050", 6));
+      const receipt = await app.inject({ method: "GET", url: `/v1/settlements/${id2}` });
+      expect(receipt.statusCode, receipt.body).toBe(200);
+      expect(receipt.json().legs).toHaveLength(2);
+      expect(receipt.json().route[0].venue).toBe("native-dvp");
+      const perAsset = await db<
+        { s: string }[]
+      >`select sum(e.amount)::text as s from ledger_entry e join ledger_transaction t on t.id = e.ledger_transaction_id where t.idempotency_key = ${`intent:${id2}`} group by e.asset_id`;
+      for (const row of perAsset) expect(row.s).toBe("0");
+      console.log(`dvp ${id2}: tx ${settled.json().state.txHash}`);
+    }, 240_000);
   },
 );

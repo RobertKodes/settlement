@@ -4,12 +4,15 @@ import { ApiError } from "./errors.js";
 import type { ExecutionEngine } from "./execution.js";
 import { InMemoryIdempotencyStore } from "./idempotency.js";
 import type { LedgerPoster } from "./ledger.js";
+import { InMemoryPolicyRepository, type PolicyRepository } from "./policy.js";
 import { type AccountRepository, InMemoryAccountRepository } from "./repos/accounts.js";
 import { type AsyncIdempotencyStore, asAsync } from "./repos/idempotency.js";
 import { InMemoryIntentRepository, type IntentRepository } from "./repos/intents.js";
+import { InMemorySignatureRepository, type SignatureRepository } from "./repos/signatures.js";
 import { registerAccountRoutes } from "./routes/accounts.js";
 import { type ChainProbe, registerHealthRoutes } from "./routes/health.js";
 import { registerIntentRoutes } from "./routes/intents.js";
+import { registerSettleRoutes } from "./routes/settle.js";
 import { registerSettlementRoutes } from "./routes/settlements.js";
 
 export interface AppDeps {
@@ -18,6 +21,8 @@ export interface AppDeps {
   idempotency?: AsyncIdempotencyStore;
   engine?: ExecutionEngine;
   ledger?: LedgerPoster;
+  policies?: PolicyRepository;
+  signatures?: SignatureRepository;
   chains?: ChainProbe[];
   logger?: boolean;
 }
@@ -81,15 +86,26 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
   const intents = deps.intents ?? new InMemoryIntentRepository();
   const accounts = deps.accounts ?? new InMemoryAccountRepository();
   const idempotency = deps.idempotency ?? asAsync(new InMemoryIdempotencyStore());
+  const policies = deps.policies ?? new InMemoryPolicyRepository();
+  const signatures = deps.signatures ?? new InMemorySignatureRepository();
   registerHealthRoutes(app, deps.chains ?? []);
   registerAccountRoutes(app, { accounts, ...(deps.engine ? { engine: deps.engine } : {}) });
   registerIntentRoutes(app, {
     intents,
     accounts,
     idempotency,
+    policies,
     ...(deps.engine ? { engine: deps.engine } : {}),
     ...(deps.ledger ? { ledger: deps.ledger } : {}),
   });
   registerSettlementRoutes(app, { intents, ...(deps.engine ? { engine: deps.engine } : {}) });
+  registerSettleRoutes(app, {
+    intents,
+    accounts,
+    policies,
+    signatures,
+    ...(deps.engine ? { engine: deps.engine } : {}),
+    ...(deps.ledger ? { ledger: deps.ledger } : {}),
+  });
   return app;
 }

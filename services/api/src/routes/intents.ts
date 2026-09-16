@@ -5,6 +5,7 @@ import { errors } from "../errors.js";
 import type { ExecutionEngine, QuoteDraft } from "../execution.js";
 import { fingerprint } from "../idempotency.js";
 import type { LedgerPoster } from "../ledger.js";
+import { type PolicyRepository, requiredApprovals } from "../policy.js";
 import type { AccountRepository } from "../repos/accounts.js";
 import type { AsyncIdempotencyStore } from "../repos/idempotency.js";
 import type { IntentRepository } from "../repos/intents.js";
@@ -15,6 +16,7 @@ const Hex = z.string().regex(/^0x([0-9a-fA-F]{2})*$/);
 const AuthorizeSchema = z.object({ permitSignature: Hex, signature: Hex.optional() });
 
 export interface IntentDeps {
+  policies?: PolicyRepository;
   intents: IntentRepository;
   accounts: AccountRepository;
   idempotency: AsyncIdempotencyStore;
@@ -75,7 +77,24 @@ export function registerIntentRoutes(app: FastifyInstance, deps: IntentDeps): vo
     let recipient: { address: `0x${string}`; accountId?: string };
     try {
       recipient = await deps.engine.resolveRecipient(rec.intent, (h) => deps.accounts.byHandle(h));
-      draft = await deps.engine.quote(rec.intent, sender, recipient.address);
+      if (rec.intent.action === "settle") {
+        if (!deps.engine.settleDeps) throw new Error("DvP settlement contract not configured");
+        const partyB = recipient.accountId
+          ? await deps.accounts.byId(recipient.accountId)
+          : undefined;
+        if (!partyB) throw new Error("settle counterparty must be an account handle");
+        const { quoteSettle } = await import("../settle.js");
+        draft = (await quoteSettle(
+          deps.engine.settleDeps,
+          rec.intent,
+          sender,
+          partyB,
+          deps.engine.chainId,
+          rec.intentId,
+        )) as unknown as QuoteDraft;
+      } else {
+        draft = await deps.engine.quote(rec.intent, sender, recipient.address);
+      }
     } catch (e) {
       await deps.intents
         .transition(rec.intentId, rec.status === "CREATED" ? "AUTHORIZED" : rec.status)
@@ -116,8 +135,27 @@ export function registerIntentRoutes(app: FastifyInstance, deps: IntentDeps): vo
         .send({ intentId: rec.intentId, userOpHash: hash, status: rec.status });
 
     op.signature = parsed.data.signature as `0x${string}`;
-    // Policy check placeholder: amount within the quote, permit within bounds. Real policy engine lands in Phase 6.
-    const checked = await deps.intents.transition(rec.intentId, "POLICY_CHECKED");
+    // Policy: the sender's approval thresholds on the source amount (blueprint section 6).
+    const required = deps.policies
+      ? requiredApprovals(
+          await deps.policies.getApprovalPolicy(rec.accountId),
+          BigInt(rec.intent.source.amount),
+        )
+      : 0;
+    const approvals = deps.policies ? await deps.policies.approvals(rec.intentId) : [];
+    if (approvals.length < required) {
+      await deps.intents.transition(rec.intentId, "FAILED_POLICY", {
+        failureCode: "approvals_missing",
+        state: { required, approvals },
+      });
+      throw errors.policyDenied(`${required} approval(s) required, ${approvals.length} given`, {
+        required,
+        approvals,
+      });
+    }
+    const checked = await deps.intents.transition(rec.intentId, "POLICY_CHECKED", {
+      state: { required, approvals },
+    });
     const locked = await deps.intents.transition(checked.intentId, "ROUTE_LOCKED", {
       state: { userOpHash: hash },
     });

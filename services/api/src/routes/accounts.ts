@@ -24,7 +24,7 @@ export function registerAccountRoutes(
     if (!parsed.success) throw errors.validation({ issues: parsed.error.issues });
     if (!deps.engine) throw errors.unsupported("no execution chain configured");
     const { handle, kind, passkey } = parsed.data;
-    const address = await deps.engine.accountAddress(
+    const address = await deps.engine.deployAccount(
       passkey.qx as `0x${string}`,
       passkey.qy as `0x${string}`,
       passkey.salt as `0x${string}`,

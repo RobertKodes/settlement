@@ -6,9 +6,11 @@ import { connect } from "./db.js";
 import { devnetChainDeps } from "./devnet.js";
 import { ExecutionEngine } from "./execution.js";
 import { PgLedgerPoster } from "./ledger.js";
+import { PgPolicyRepository } from "./policy.js";
 import { PgAccountRepository } from "./repos/accounts.js";
 import { PgIdempotencyStore } from "./repos/idempotency.js";
 import { PgIntentRepository } from "./repos/intents.js";
+import { PgSignatureRepository } from "./repos/signatures.js";
 
 const env = loadEnv();
 const db = connect(env.DATABASE_URL);
@@ -27,6 +29,8 @@ const app = buildApp({
   accounts: new PgAccountRepository(db),
   idempotency: new PgIdempotencyStore(db),
   ledger: new PgLedgerPoster(db),
+  policies: new PgPolicyRepository(db),
+  signatures: new PgSignatureRepository(db),
   ...(chain ? { engine: new ExecutionEngine(chain) } : {}),
   chains: [
     { name: "l1", rpcUrl: env.L1_RPC_URL, expectedChainId: env.L1_CHAIN_ID },

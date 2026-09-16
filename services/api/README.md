@@ -14,6 +14,10 @@ Fastify + zod, conventions in `docs/api/conventions.md` (ADR-0024). Persistence 
 | `GET` | `/v1/intents/:id` | status, failure code, flow state |
 | `POST` | `/v1/intents/:id/quote` | build the unsigned user operation and the EIP-2612 permit digest; fee bounds in USDC → `QUOTED` |
 | `POST` | `/v1/intents/:id/authorize` | `{permitSignature}` → returns the user-op hash to sign; `{permitSignature, signature}` → submits through the paymaster → `SETTLED` (ledger posted) or `FAILED_EXECUTION` |
+| `POST` | `/v1/accounts/:handle/policy` | approval thresholds `{thresholds:[{aboveBaseUnits, approvals}]}` (blueprint section 6) |
+| `POST` | `/v1/intents/:id/sign` | `settle` intents: `{party: A|B, signature, permit?}` each party's authorization of the DvP typed data |
+| `POST` | `/v1/intents/:id/approve` | `{approver}` records an approval against the governing policy |
+| `POST` | `/v1/intents/:id/execute` | `settle` intents: with both signatures and every required approval, the settlement agent runs `DvPSettlement.settleWithPermits` atomically → `SETTLED` |
 | `GET` | `/v1/settlements/:intentId` | settlement receipt (blueprint section 10) with live L1 finality; moves `SETTLED → PROVEN` |
 
 The passkey signs exactly two digests, both returned by the API: the permit (fee allowance for the
@@ -29,5 +33,7 @@ pnpm --filter @settlement/api dev            # http://localhost:3000, chain deps
 pnpm --filter @settlement/api test:devnet    # end-to-end flow test (needs both of the above)
 ```
 
-Supported today: `transfer` intents of USDC on `l2-devnet` to an address or an account handle. Every
+Supported today on `l2-devnet`: `transfer` (USDC), `swap` (USDC<->EURC through the router and the native StableSwap pool),
+`settle` (atomic DvP/PvP between two accounts, `destination.amount` is the counter-leg). Accounts are deployed on creation
+so ERC-1271 signatures verify for settlements. Every
 other action or asset fails the quote with `unsupported_intent` and the intent moves to `FAILED_QUOTE`.

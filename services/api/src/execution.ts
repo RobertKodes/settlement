@@ -39,6 +39,8 @@ export interface ChainDeps {
   /** Milestone D: USDC/EURC StableSwap pool and the EURC token, when deployed. */
   eurc?: Address;
   pool?: Address;
+  /** Milestone F: DvPSettlement contract, when deployed. */
+  dvp?: Address;
 }
 
 /** JSON- and database-safe form of PackedUserOperation (bigints as decimal strings). */
@@ -84,6 +86,10 @@ export class ExecutionEngine {
 
   get chainId(): number {
     return CHAINS[this.deps.chainKey].chainId;
+  }
+
+  get settleDeps() {
+    return this.deps.dvp ? { ...this.deps, dvp: this.deps.dvp } : undefined;
   }
 
   get tokens(): { usdc: Address; eurc?: Address } {
@@ -284,6 +290,26 @@ export class ExecutionEngine {
     if (!this.deps.l1 || !this.deps.rollup) return { state: "INCLUDED" };
     const finalized = await readFinalizedL2Block(this.deps.l1, this.deps.rollup);
     return { state: finalityOf(blockNumber, finalized), finalizedL2Block: finalized };
+  }
+
+  /**
+   * Deploy the passkey account now (idempotent on the factory). Counterfactual accounts cannot pass
+   * ERC-1271 checks until they have code, and DvP settlement verifies both parties through ERC-1271.
+   * ERC-6492 would avoid the deployment; adopting it is an open item in ADR-0008.
+   */
+  async deployAccount(qx: Hex, qy: Hex, salt: Hex): Promise<Address> {
+    const address = await this.accountAddress(qx, qy, salt);
+    const code = await this.deps.l2.getCode({ address });
+    if (code && size(code) > 0) return address;
+    const hash = await this.deps.bundler.writeContract({
+      address: this.deps.factory,
+      abi: passkeyAccountFactoryAbi,
+      functionName: "createAccount",
+      args: [qx, qy, salt],
+    });
+    const receipt = await this.deps.l2.waitForTransactionReceipt({ hash });
+    if (receipt.status !== "success") throw new Error(`account deployment reverted in ${hash}`);
+    return address;
   }
 
   /** Counterfactual address for a new passkey account. */

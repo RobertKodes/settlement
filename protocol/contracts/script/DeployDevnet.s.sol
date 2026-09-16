@@ -5,6 +5,7 @@ import {Script, console} from "forge-std/Script.sol";
 import {NetworkVersion} from "../src/NetworkVersion.sol";
 import {TestUSDC, TestEURC} from "../src/TestUSDC.sol";
 import {StableSwapPool} from "../src/dex/StableSwapPool.sol";
+import {DvPSettlement} from "../src/settlement/DvPSettlement.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @dev Devnet-only bundle: NetworkVersion + TestUSDC (minted to the deployer). Run through
@@ -26,7 +27,9 @@ contract DeployDevnet is Script {
         usdc.approve(address(pool), 5_000_000e6);
         eurc.approve(address(pool), 5_000_000e6);
         pool.addLiquidity([uint256(5_000_000e6), uint256(5_000_000e6)], 0, type(uint256).max);
+        DvPSettlement dvp = new DvPSettlement();
         vm.stopBroadcast();
+        console.log("DvPSettlement", address(dvp));
         console.log("NetworkVersion", address(nv));
         console.log("TestUSDC", address(usdc));
         console.log("TestEURC", address(eurc));

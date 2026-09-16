@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   AssetAmountSchema,
   AssetSymbolSchema,
+  BaseUnitsSchema,
   BpsSchema,
   ChainIdSchema,
   TimestampSchema,
@@ -36,6 +37,8 @@ export const IntentDestinationSchema = z.object({
   /** A product account handle (`institution-b`, `counterparty@network`), never a raw address at this layer. */
   recipient: z.string().min(1).max(128),
   chainId: ChainIdSchema.optional(),
+  /** Counter-leg amount for `settle` (DvP/PvP): what the recipient pays back in `destination.asset`. */
+  amount: BaseUnitsSchema.optional(),
 });
 
 /** Mirrors the section 7 example exactly; `intentId`/`accountId` are assigned by the API, not the client. */

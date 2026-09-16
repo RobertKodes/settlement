@@ -23,7 +23,26 @@ export interface SwapPost {
   blockNumber: bigint;
 }
 
+export interface SettlementPost {
+  intentId: string;
+  chainId: number;
+  accountA: string;
+  accountB: string;
+  tokenA: Address;
+  symbolA: string;
+  amountA: bigint; // A -> B
+  tokenB: Address;
+  symbolB: string;
+  amountB: bigint; // B -> A
+  txHash: Hex;
+  blockNumber: bigint;
+}
+
 export interface LedgerPoster {
+  /** Atomic DvP/PvP: A gives tokenA to B, B gives tokenB to A. Four entries, balanced per asset. */
+  postSettlement(
+    p: SettlementPost,
+  ): Promise<{ ledgerTransactionId: string; chainTransactionId: string }>;
   /** Swap through the native pool: account gives tokenIn (+fee), receives tokenOut; the pool is an external counterparty. */
   postSwap(p: SwapPost): Promise<{ ledgerTransactionId: string; chainTransactionId: string }>;
   postTransfer(p: {
@@ -45,6 +64,59 @@ const hexToBuf = (h: string) => Buffer.from(h.slice(2), "hex");
 
 export class PgLedgerPoster implements LedgerPoster {
   constructor(private readonly db: Db) {}
+
+  async postSettlement(p: SettlementPost) {
+    return this.db.begin(async (tx) => {
+      const assetId = async (symbol: string, token: Address) => {
+        const [a] = await tx<
+          { id: string }[]
+        >`insert into asset (symbol, chain_id, address, decimals, kind) values (${symbol}, ${p.chainId}, ${hexToBuf(token)}, 6, 'stablecoin')
+          on conflict (chain_id, symbol, address) do update set decimals = excluded.decimals returning id`;
+        return a!.id;
+      };
+      const la = async (accountId: string, asset: string): Promise<string> => {
+        const rows = await tx<
+          { id: string }[]
+        >`insert into ledger_account (account_id, asset_id, kind) values (${accountId}::uuid, ${asset}::uuid, 'available')
+          on conflict (account_id, asset_id, kind) do update set kind = excluded.kind returning id`;
+        return rows[0]!.id;
+      };
+      const [aId, bId] = await Promise.all([
+        assetId(p.symbolA, p.tokenA),
+        assetId(p.symbolB, p.tokenB),
+      ]);
+      const [chainTx] = await tx<
+        { id: string }[]
+      >`insert into chain_transaction (chain_id, tx_hash, block_number, status) values (${p.chainId}, ${hexToBuf(p.txHash)}, ${p.blockNumber.toString()}, 'included')
+        on conflict (chain_id, tx_hash) do update set block_number = excluded.block_number returning id`;
+      const entries = [
+        {
+          ledger_account_id: await la(p.accountA, aId),
+          asset_id: aId,
+          amount: (-p.amountA).toString(),
+        },
+        {
+          ledger_account_id: await la(p.accountB, aId),
+          asset_id: aId,
+          amount: p.amountA.toString(),
+        },
+        {
+          ledger_account_id: await la(p.accountB, bId),
+          asset_id: bId,
+          amount: (-p.amountB).toString(),
+        },
+        {
+          ledger_account_id: await la(p.accountA, bId),
+          asset_id: bId,
+          amount: p.amountB.toString(),
+        },
+      ];
+      const [posted] = await tx<
+        { ledger_post: string }[]
+      >`select ledger_post(${`intent:${p.intentId}`}, 'settlement', 'intent', null, ${tx.json(entries)}, ${`dvp ${p.txHash}`})`;
+      return { ledgerTransactionId: posted!.ledger_post, chainTransactionId: chainTx!.id };
+    });
+  }
 
   async postSwap(p: SwapPost) {
     return this.db.begin(async (tx) => {
@@ -148,6 +220,13 @@ export class PgLedgerPoster implements LedgerPoster {
 }
 
 export class NoopLedgerPoster implements LedgerPoster {
+  async postSettlement(p: SettlementPost) {
+    this.posts.push(p as never);
+    return {
+      ledgerTransactionId: `mem-${this.posts.length}`,
+      chainTransactionId: `mem-tx-${this.posts.length}`,
+    };
+  }
   async postSwap(p: SwapPost) {
     this.posts.push(p as never);
     return {

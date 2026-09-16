@@ -27,6 +27,9 @@ not done until this table is updated (blueprint section 34).
 | accounts | user-op signature forgery / replay | PasskeyAccount | P-256 over the EntryPoint v0.8 typed-data hash (chain id + entry point in the domain), EntryPoint nonces; wrong-key op rejected in tests | partial | 0008 |
 | accounts | ERC-1271 cross-context replay | PasskeyAccount | per-account key today; ERC-7739 rehashing before production | planned | 0008 |
 | accounts | server-side authorization bypass | services/api | the API only relays: an intent executes solely with the passkey's two signatures (permit + user-op hash) returned by the quote; the bundler key cannot move user funds | done | 0008, 0024 |
+| settlement | one leg settles without the other | DvPSettlement | both legs in one transaction, `LegMismatch` check, tested rollback when a leg fails | done | 0013 |
+| settlement | settlement replay / stale terms | DvPSettlement | EIP-712 id executes once, deadline, either party can cancel, nonce = intent id | done | 0013 |
+| settlement | payment above policy without approval | services/api | approvals recorded per governing policy; `FAILED_POLICY` terminal, tested | done | 0025 |
 | ledger | double posting on retry | services/api ledger poster | `ledger_post` idempotency key `intent:<id>`; API-level `Idempotency-Key` on creation | done | 0015, 0024 |
 | gas | paymaster drained by over-charging or unbounded permits | USDCPaymaster | prefund capped at `maxCost` and at `permitAmount`, refund in `_postOp`, permit amount checked before pulling funds | partial | 0006 |
 | gas | stale/manipulated token price | USDCPaymaster | owner-set stub on the devnet; OracleAdapter with freshness/deviation bounds before any real value | planned | 0006, 0020 |

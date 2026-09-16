@@ -37,7 +37,7 @@ make devnet-up         # local L1 (Besu+Teku) + L2 (Maru+Besu) + coordinator + d
 make devnet-status     # chain IDs, block heights, L1 finality, service table
 make devnet-deploy     # NetworkVersion + TestUSDC on the L2 -> chain/lineth/deployments.local.json
 make devnet-milestone-c # EntryPoint v0.8 + passkey account + USDC-paid gas, end to end on the L2
-# pnpm --filter @settlement/api test:devnet  -> transfer and swap intents end to end (Milestones C, D, E)
+# pnpm --filter @settlement/api test:devnet  -> transfer, swap and DvP intents end to end (Milestones C-F)
 make services-up       # Postgres 16 (:5439) + Redis 7 (:6389) for the ledger
 make ledger-migrate    # applies services/ledger/migrations/*.sql
 make test              # vitest across packages + forge test
@@ -61,8 +61,8 @@ make test              # vitest across packages + forge test
 | `packages/config/` | `@settlement/config`: chain registry with chain-scoped decimals, CCTP domains, Circle/Bridge endpoints, env loader | done |
 | `integrations/circle/{cctp,gateway,arc}/` | interfaces + in-memory mocks + tests | interfaces only |
 | `integrations/fiat/` | `FiatProvider` interface + mock; Bridge mapping | interfaces only |
-| `protocol/contracts/` | Foundry: `TestUSDC` (EIP-2612 + ERC-1271 permit), `PasskeyAccount` + factory (ERC-4337 v0.8, P-256, ERC-7821), `USDCPaymaster` (Circle-compatible permit fee flow), Milestone C tests, `StableSwapPool` (Curve invariant, fuzzed) | Milestones C, D |
-| `services/api/` | `@settlement/api`: accounts (passkey-bound), intents with quote/authorize/execute through the paymaster, ledger posting, settlement receipts with L1 finality; Postgres repositories; `test:devnet` end-to-end | product spine |
+| `protocol/contracts/` | Foundry: `TestUSDC` (EIP-2612 + ERC-1271 permit), `PasskeyAccount` + factory (ERC-4337 v0.8, P-256, ERC-7821), `USDCPaymaster` (Circle-compatible permit fee flow), Milestone C tests, `StableSwapPool` (Curve invariant, fuzzed), `DvPSettlement` (atomic DvP/PvP, ERC-1271) | Milestones C, D, F |
+| `services/api/` | `@settlement/api`: accounts (passkey-bound), intents with quote/authorize/execute through the paymaster, ledger posting, settlement receipts with L1 finality, approval policies, two-party DvP settlement; Postgres repositories; `test:devnet` end-to-end (transfer, swap, DvP) | Milestones C-F |
 | `services/ledger/` | schema v1 (every blueprint section 27 entity) + 0002 (API idempotency, wallet signer), `ledger_post()`, migrate/smoke scripts | done |
 | `infra/docker/`, `infra/ci/`, `.github/workflows/ci.yml` | services compose; CI jobs `ts`, `contracts`, `schema`, `name-check` | done |
 | `docs/architecture/`, `docs/adr/`, `docs/api/` | blueprint, 25 ADRs (10 accepted, 15 proposed), API conventions | done |

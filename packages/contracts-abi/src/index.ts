@@ -1,3 +1,4 @@
+export { dvpSettlementAbi } from "./DvPSettlement.js";
 export { entryPointAbi } from "./EntryPoint.js";
 export { linethRollupAbi } from "./LinethRollup.js";
 export { networkVersionAbi } from "./NetworkVersion.js";
