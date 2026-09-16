@@ -23,7 +23,8 @@
     "@settlement/contracts-abi": "workspace:*",
     "postgres": "^3.4.7",
     "@settlement/router": "workspace:*",
-    "@settlement/integration-fiat": "workspace:*"
+    "@settlement/integration-fiat": "workspace:*",
+    "@fastify/cors": "^11.0.0"
   },
   "devDependencies": {
     "@settlement/sdk": "workspace:*"

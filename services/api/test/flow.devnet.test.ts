@@ -340,47 +340,21 @@ describe.skipIf(!enabled || !chain?.dvp)(
       });
       expect(sB.json().signed).toEqual(["A", "B"]);
 
-      // without the approval the policy blocks execution
+      // without the approval the policy blocks execution; the intent waits (still QUOTED, signatures kept)
       const denied = await app.inject({ method: "POST", url: `/v1/intents/${intentId}/execute` });
       expect(denied.statusCode, denied.body).toBe(422);
       expect(denied.json().error.code).toBe("policy_denied");
-      // FAILED_POLICY is terminal: a new intent is needed after an approval. Create, quote, sign again with the approval first.
-      const created2 = await app.inject({
-        method: "POST",
-        url: "/v1/intents",
-        headers: { "idempotency-key": `k2-${run}`, "x-account-id": a.accountId },
-        payload: created.json().intent,
-      });
-      const id2 = created2.json().intentId as string;
-      const q2 = await app.inject({ method: "POST", url: `/v1/intents/${id2}/quote` });
-      const d2 = q2.json().state.quote as {
-        digests: { settlement: `0x${string}`; permitA: `0x${string}`; permitB: `0x${string}` };
-      };
-      await app.inject({
-        method: "POST",
-        url: `/v1/intents/${id2}/sign`,
-        payload: {
-          party: "A",
-          signature: instA.sign(d2.digests.settlement),
-          permit: instA.sign(d2.digests.permitA),
-        },
-      });
-      await app.inject({
-        method: "POST",
-        url: `/v1/intents/${id2}/sign`,
-        payload: {
-          party: "B",
-          signature: instB.sign(d2.digests.settlement),
-          permit: instB.sign(d2.digests.permitB),
-        },
-      });
+      expect(
+        (await app.inject({ method: "GET", url: `/v1/intents/${intentId}` })).json().status,
+      ).toBe("QUOTED");
       const approved = await app.inject({
         method: "POST",
-        url: `/v1/intents/${id2}/approve`,
+        url: `/v1/intents/${intentId}/approve`,
         payload: { approver: "risk-officer@inst-b" },
       });
       expect(approved.statusCode, approved.body).toBe(200);
       expect(approved.json().required).toBe(1);
+      const id2 = intentId;
       const settled = await app.inject({ method: "POST", url: `/v1/intents/${id2}/execute` });
       expect(settled.statusCode, settled.body).toBe(200);
       expect(settled.json().status).toBe("SETTLED");

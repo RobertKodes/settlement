@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import cors from "@fastify/cors";
 import { type FiatProvider, MockFiatProvider } from "@settlement/integration-fiat";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { Db } from "./db.js";
@@ -14,9 +15,11 @@ import { type AsyncIdempotencyStore, asAsync } from "./repos/idempotency.js";
 import { InMemoryIntentRepository, type IntentRepository } from "./repos/intents.js";
 import { InMemorySignatureRepository, type SignatureRepository } from "./repos/signatures.js";
 import { registerAccountRoutes } from "./routes/accounts.js";
+import { registerDevnetRoutes } from "./routes/devnet.js";
 import { registerFiatRoutes } from "./routes/fiat.js";
 import { type ChainProbe, registerHealthRoutes } from "./routes/health.js";
 import { registerIntentRoutes } from "./routes/intents.js";
+import { registerPortfolioRoutes } from "./routes/portfolio.js";
 import { registerSettleRoutes } from "./routes/settle.js";
 import { registerSettlementRoutes } from "./routes/settlements.js";
 
@@ -44,6 +47,9 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
         : `req_${randomUUID()}`,
     requestIdHeader: false,
   });
+
+  // Browser clients (apps/terminal) run on another origin in development.
+  app.register(cors, { origin: true, exposedHeaders: ["X-Request-Id", "Idempotent-Replayed"] });
 
   app.addHook("onSend", async (req, reply) => {
     reply.header("X-Request-Id", req.id);
@@ -121,6 +127,12 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
   registerReconciliationRoutes(app, {
     ...(deps.db ? { db: deps.db } : {}),
     ...(deps.engine ? { chain: deps.engine.chainDeps } : {}),
+  });
+  registerDevnetRoutes(app, { accounts, ...(deps.engine ? { engine: deps.engine } : {}) });
+  registerPortfolioRoutes(app, {
+    accounts,
+    ...(deps.engine ? { engine: deps.engine } : {}),
+    ...(deps.db ? { db: deps.db } : {}),
   });
   registerSettleRoutes(app, {
     intents,

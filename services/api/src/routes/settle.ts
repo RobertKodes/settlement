@@ -98,13 +98,11 @@ export function registerSettleRoutes(app: FastifyInstance, deps: SettleDeps): vo
     const required = await requiredFor(deps, rec.intentId);
     const approvals = await deps.policies.approvals(rec.intentId);
     if (approvals.length < required) {
-      await deps.intents.transition(rec.intentId, "FAILED_POLICY", {
-        failureCode: "approvals_missing",
-        state: { required, approvals },
-      });
+      // Not terminal: the intent waits in the approval queue (status stays QUOTED with both signatures kept).
       throw errors.policyDenied(`${required} approval(s) required, ${approvals.length} given`, {
         required,
         approvals,
+        awaiting: "approvals",
       });
     }
     const checked = await deps.intents.transition(rec.intentId, "POLICY_CHECKED", {

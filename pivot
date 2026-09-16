@@ -1,0 +1,642 @@
+# CRITICAL CORRECTION — USE LINETH AND ARC, DO NOT COPY THEM
+
+Stop the previous architecture pivot.
+
+I do NOT want to copy the ideas of Lineth or Arc.
+
+I explicitly want this product to USE:
+
+1. **Lineth**
+2. **Arc**
+3. **Circle / USDC**
+4. **Ethereum where required by Lineth settlement**
+5. **Fiat/banking providers**
+
+These are real dependencies and infrastructure components of the system.
+
+At the same time, the PRODUCT is not "launch another general-purpose blockchain and compete for users as another L2."
+
+The product is an **institutional settlement network/platform built using Lineth and Arc together.**
+
+---
+
+# PRODUCT THESIS
+
+Build:
+
+> A USDC-native institutional settlement platform combining Lineth ZK execution/proving infrastructure with Arc's stablecoin financial infrastructure, exposing fiat, USDC, ERC-20 assets and EVM functionality through one programmable institutional account.
+
+The product we own is:
+
+* Unified Institutional Account
+* Intent Engine
+* Policy Engine
+* Smart Router
+* Settlement Engine
+* DvP/PvP
+* Exchange/liquidity abstraction
+* Institutional ledger
+* Reconciliation
+* Fiat orchestration
+* Developer APIs/SDK
+* Institutional applications
+
+But the underlying infrastructure MUST actually integrate Lineth and Arc.
+
+---
+
+# SYSTEM ARCHITECTURE
+
+Target:
+
+```text id="n17jjv"
+                  OUR PRODUCT
+
+            UNIFIED INSTITUTIONAL
+                   ACCOUNT
+
+                      │
+                      ▼
+
+                 INTENT ENGINE
+
+                      │
+                      ▼
+
+                 POLICY ENGINE
+
+                      │
+                      ▼
+
+                 SMART ROUTER
+
+                      │
+             ┌────────┴────────┐
+             │                 │
+             ▼                 ▼
+
+          LINETH              ARC
+        ZK EXECUTION      STABLECOIN
+        + PROVING         FINANCIAL
+                         COORDINATION
+
+             │                 │
+             │                 ├── USDC
+             │                 ├── EURC
+             │                 ├── StableFX
+             │                 └── Circle ecosystem
+             │
+             └────────┬────────┘
+                      │
+                 CIRCLE STACK
+                      │
+               ┌──────┴──────┐
+               │             │
+              CCTP        GATEWAY
+               │             │
+               └──────┬──────┘
+                      │
+                     USDC
+
+                      +
+
+               FIAT PROVIDERS
+                      │
+                      ▼
+                 BANKING RAILS
+```
+
+Lineth and Arc are NOT interchangeable.
+
+Give each one a specific responsibility.
+
+---
+
+# LINETH RESPONSIBILITY
+
+Use the REAL Lineth stack.
+
+Lineth is our ZK execution/proving component.
+
+Preserve the existing Lineth work already implemented:
+
+* Besu
+* Maru
+* sequencer
+* coordinator
+* prover
+* L1 rollup contracts
+* Ethereum settlement
+* EVM execution
+* Solidity compatibility
+
+Do NOT delete or demote this work to meaningless experimentation.
+
+Instead, narrow its purpose.
+
+We are NOT trying to create a generic public blockchain ecosystem.
+
+The Lineth execution environment exists specifically for our settlement system.
+
+Use it for:
+
+* programmable settlement
+* DvP
+* PvP
+* atomic settlement
+* institutional smart accounts
+* policy-enforced transactions
+* settlement contracts
+* ERC-20 settlement
+* settlement receipts
+* ZK verification/proving
+* auditable state transitions
+
+Conceptually:
+
+```text id="u49h95"
+Settlement Intent
+       │
+       ▼
+Policy + Authorization
+       │
+       ▼
+LINETH EXECUTION
+       │
+ ┌─────┼─────────┐
+ │     │         │
+DvP   PvP    Transfers
+ │     │         │
+ └─────┼─────────┘
+       │
+       ▼
+Settlement State
+       │
+       ▼
+ZK Proof
+       │
+       ▼
+Ethereum
+```
+
+Lineth therefore remains a REAL production infrastructure dependency.
+
+But the Lineth environment is purpose-built for settlement rather than marketed as "yet another blockchain."
+
+---
+
+# ARC RESPONSIBILITY
+
+Arc must also be a REAL infrastructure dependency.
+
+Arc is the Circle/stablecoin financial coordination side of the architecture.
+
+Use Arc for appropriate:
+
+* USDC liquidity
+* EURC liquidity
+* stablecoin settlement
+* stablecoin FX
+* StableFX where available/applicable
+* institutional liquidity
+* Circle ecosystem connectivity
+* financial coordination
+* USDC-centric execution
+
+Conceptually:
+
+```text id="lffvhq"
+               ARC
+
+        USDC / EURC liquidity
+                 │
+              StableFX
+                 │
+        institutional finance
+                 │
+                 ▼
+           OUR SMART ROUTER
+```
+
+Do NOT rebuild Arc.
+
+Integrate Arc.
+
+---
+
+# LINETH + ARC
+
+The core technical innovation of our system is the orchestration BETWEEN them.
+
+Example:
+
+An institution wants:
+
+> Deliver $10M tokenized treasury assets and receive EUR.
+
+Our system may determine:
+
+```text id="8ibj6d"
+Tokenized Asset
+      │
+      ▼
+LINETH
+      │
+DvP settlement contract
+      │
+      │ settlement requires EUR value
+      ▼
+SMART ROUTER
+      │
+      ▼
+ARC
+      │
+USDC → EURC
+StableFX / liquidity
+      │
+      ▼
+EURC
+      │
+      ▼
+Settlement
+      │
+      ▼
+LINETH
+      │
+final state transition
+      │
+      ▼
+ZK PROOF
+      │
+      ▼
+ETHEREUM
+```
+
+This is substantially different from simply copying Lineth or Arc.
+
+We are combining them.
+
+---
+
+# CIRCLE RESPONSIBILITY
+
+Use Circle's actual infrastructure wherever supported.
+
+Create production-grade integration boundaries for:
+
+## USDC
+
+Primary settlement currency.
+
+## CCTP
+
+Native USDC movement between supported networks.
+
+## Gateway
+
+Unified USDC liquidity/balance abstraction where supported.
+
+## Arc
+
+Circle's stablecoin-focused execution/coordination environment.
+
+Do NOT pretend our Lineth environment automatically receives:
+
+* native Circle-issued USDC
+* CCTP domain support
+* Gateway support
+
+Those require actual Circle support/integration.
+
+Until available:
+
+* maintain typed adapters
+* mocks
+* test assets
+* integration tests
+* explicit BLOCKED status
+
+Do NOT fake production support.
+
+---
+
+# THE ROUTER IS THE BRIDGE BETWEEN THE WORLDS
+
+Promote the existing router.
+
+It needs to understand:
+
+```text id="aluc8a"
+LINETH
+
+execution
+settlement
+DvP
+PvP
+contracts
+ZK finality
+
+       ↕
+
+OUR ROUTER
+
+       ↕
+
+ARC
+
+USDC
+EURC
+StableFX
+liquidity
+Circle ecosystem
+```
+
+It must calculate complete routes.
+
+Example:
+
+```text id="lvt65u"
+INTENT
+
+Sell asset X
+Receive €5M
+
+        │
+        ▼
+Route planner
+        │
+        ├── Lineth settlement
+        │
+        ├── USDC required
+        │
+        ├── CCTP movement
+        │
+        ├── Arc FX
+        │
+        ├── EURC output
+        │
+        └── Lineth final settlement
+        │
+        ▼
+Simulation
+        │
+        ▼
+Policy
+        │
+        ▼
+Authorization
+        │
+        ▼
+Execution
+        │
+        ▼
+Reconciliation
+```
+
+A route can therefore involve MULTIPLE infrastructure systems.
+
+Do not assume "one intent = one blockchain transaction."
+
+---
+
+# UNIFIED ACCOUNT
+
+The user sees ONE institutional account.
+
+Example:
+
+```text id="3qdw7q"
+ACME CAPITAL
+
+Net assets
+$148.2M
+
+Fiat
+USD                 $21.0M
+EUR                 €8.2M
+
+Stablecoins
+USDC                $42.1M
+EURC                €11.8M
+
+Tokenized assets
+Treasuries          $51.2M
+
+Liquidity
+USDC/EURC            $4.3M
+```
+
+But internally preserve provenance:
+
+```text id="q1ib04"
+USDC
+
+Arc                 $15M
+Lineth settlement   $10M
+Ethereum             $5M
+Gateway              $8M
+Pending               $4M
+```
+
+The Unified Account is OUR abstraction across Lineth + Arc + Circle + fiat.
+
+---
+
+# FIAT
+
+Fiat remains outside the permissionless/ZK core.
+
+Use real providers.
+
+Architecture:
+
+```text id="88xl1l"
+Bank
+ │
+ ▼
+Fiat Provider
+ │
+ ▼
+USDC
+ │
+ ▼
+Circle
+ │
+ ▼
+Arc / Lineth
+ │
+ ▼
+Unified Account
+```
+
+Keep the existing mock fiat provider for development.
+
+Replace it with real provider credentials when available.
+
+---
+
+# EXISTING A–G WORK
+
+DO NOT RESTART.
+
+The existing implementation is valuable.
+
+Map it as:
+
+A — Lineth boot
+KEEP.
+
+B — Lineth proving
+KEEP.
+This becomes the ZK settlement/proof infrastructure.
+
+C — account/paymaster
+KEEP AND EXPAND.
+Becomes Unified Account + execution authorization.
+
+D — StableSwap
+KEEP.
+Becomes an available internal liquidity venue.
+
+E — Router + Arc venue
+KEEP AND GREATLY EXPAND.
+This becomes the orchestration layer between Lineth and Arc.
+
+F — DvP
+KEEP AND EXPAND.
+This becomes the institutional settlement engine.
+
+G — fiat
+KEEP AND EXPAND.
+This becomes banking connectivity.
+
+SDK
+KEEP AND EXPAND.
+
+Nothing needs to be thrown away.
+
+---
+
+# WHAT WE ARE NOT BUILDING
+
+Do NOT build:
+
+* a Lineth replacement
+* an Arc replacement
+* a Circle replacement
+* another generic Ethereum L2 ecosystem
+* our own stablecoin
+* our own CCTP
+* our own Gateway
+* an Arc StableFX clone
+* a speculative network token
+
+Use the existing infrastructure.
+
+Build the layer connecting it.
+
+---
+
+# THE FINAL STACK
+
+```text id="32g0ae"
+┌──────────────────────────────────────────────┐
+│                 OUR PRODUCT                  │
+│                                              │
+│ Unified Account                              │
+│ Intent Engine                                │
+│ Institutional Policy                         │
+│ Smart Router                                 │
+│ DvP / PvP Settlement                         │
+│ Ledger                                       │
+│ Reconciliation                               │
+│ Fiat orchestration                           │
+│ API / SDK                                    │
+└──────────────────────┬───────────────────────┘
+                       │
+              ORCHESTRATION LAYER
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+          ▼                         ▼
+       LINETH                      ARC
+          │                         │
+     ZK execution               USDC/EURC
+     EVM contracts              StableFX
+     DvP/PvP                    liquidity
+     settlement                 institutions
+     proving                       │
+          │                        │
+          │                  CIRCLE STACK
+          │                        │
+          │                CCTP / Gateway
+          │                        │
+          └────────────┬───────────┘
+                       │
+                      USDC
+                       │
+                 FIAT PROVIDERS
+                       │
+                     BANKS
+
+
+LINETH
+   │
+ZK proofs
+   │
+   ▼
+ETHEREUM
+```
+
+---
+
+# DEVELOPMENT INSTRUCTION
+
+Before changing code:
+
+1. Inspect the entire existing repository.
+2. Read `docs/STATUS.md`.
+3. Read the existing blueprint.
+4. Identify how Lineth currently works.
+5. Identify the Arc adapter.
+6. Identify Circle/CCTP/Gateway interfaces.
+7. Identify the router.
+8. Identify DvP.
+9. Identify accounts/paymaster.
+10. Identify fiat/reconciliation.
+
+Then write `docs/ARCHITECTURE_V2.md`.
+
+The document must explicitly describe how REAL Lineth and REAL Arc work together.
+
+Then produce a migration plan.
+
+Do not delete working functionality.
+
+Do not pretend unavailable external integrations are live.
+
+Implement everything that can be implemented locally.
+
+For external dependencies:
+
+* build interfaces
+* mocks
+* integration tests
+* sandbox support
+* configuration
+* observability
+* documentation
+
+Mark genuine external blockers clearly.
+
+Then execute the architecture migration in logical commits with tests after every major change.
+
+The final goal is:
+
+> **A production-grade institutional settlement platform that ACTUALLY USES Lineth for ZK/EVM settlement infrastructure and ACTUALLY USES Arc/Circle for stablecoin financial infrastructure, connected by our Unified Account, Intent Engine, Router, Policy Engine and Settlement Engine.**
+
+Do not copy Lineth.
+
+Do not copy Arc.
+
+**USE THEM.**

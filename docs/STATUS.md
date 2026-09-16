@@ -1,5 +1,10 @@
 # Status against the blueprint — 2026-09-16
 
+> **Architecture v2 (same day):** see `docs/ARCHITECTURE_V2.md`. The Lineth rollup is private settlement
+> infrastructure (not a public chain); Arc is the money home and venue (Metapad bonding curves + our pools);
+> Circle CCTP/Gateway are the rails; Bridge the fiat edge. The A–G work below is kept as the foundation.
+
+
 The record of what exists, what is verified, and what is blocked, per blueprint phase (section 32) and
 milestone (section 39). "Verified" means a test or a scripted run passed on the local devnet today.
 Nothing here runs on a public network yet.
