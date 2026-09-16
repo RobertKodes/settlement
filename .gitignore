@@ -1,0 +1,27 @@
+# dependencies / build
+node_modules/
+dist/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# vendored upstream (pinned by chain/lineth/UPSTREAM_COMMIT, fetched by make devnet-bootstrap)
+chain/lineth/upstream/
+chain/lineth/.env.local
+chain/lineth/.resume-services
+
+# foundry
+protocol/contracts/out/
+protocol/contracts/cache/
+protocol/contracts/broadcast/
+
+# secrets / local env
+.env
+.env.*
+!.env.example
+*.keystore
+
+# os / editors
+.DS_Store
+.idea/
+.vscode/

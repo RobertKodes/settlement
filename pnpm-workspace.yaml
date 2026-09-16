@@ -1,0 +1,6 @@
+packages:
+  - packages/*
+  - integrations/circle/*
+  - integrations/fiat
+  - services/*
+  - protocol/contracts

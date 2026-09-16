@@ -1,0 +1,26 @@
+{
+  "name": "@settlement/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Chain registry (IDs, RPCs, USDC/EURC addresses with chain-scoped decimals), CCTP domains, Circle endpoints, env loader",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.1.0"
+  }
+}

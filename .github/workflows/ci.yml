@@ -1,0 +1,56 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm biome ci .
+      - run: pnpm turbo run typecheck test build --filter='!@settlement/contracts'
+
+  contracts:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: protocol/contracts } }
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - uses: foundry-rs/foundry-toolchain@v1
+        with: { version: stable }
+      - run: forge fmt --check
+      - run: forge build --sizes
+      - run: forge test -vvv
+
+  schema:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: settlement, POSTGRES_PASSWORD: settlement, POSTGRES_DB: settlement }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U settlement" --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgres://settlement:settlement@localhost:5432/settlement
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -q && sudo apt-get install -y -q postgresql-client
+      - run: bash services/ledger/migrate.sh
+      - run: bash services/ledger/migrate.sh   # second run must be a no-op
+      - run: bash services/ledger/smoke.sh
+
+  name-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make check-name

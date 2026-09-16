@@ -1,0 +1,27 @@
+{
+  "name": "@settlement/monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "description": "USDC-native institutional settlement network on a Lineth ZK rollup (working name pending)",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "gen:schema": "pnpm --filter @settlement/types gen:schema"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.0",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.20.0",
+    "turbo": "^2.5.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

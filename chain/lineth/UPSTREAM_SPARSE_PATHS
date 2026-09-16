@@ -1,0 +1,17 @@
+# One directory per line. Fetched by chain/scripts/bootstrap.sh with `git sparse-checkout set --cone`,
+# which also brings every file at the repo root (package.json, pnpm-workspace.yaml, pnpm-lock.yaml, .npmrc:
+# the quickstart's account-setup container runs `pnpm install --filter linea-monorepo --filter contracts...`).
+# patches/    -> pnpm patchedDependencies referenced by the root lockfile
+# prover/prover-assets/ -> bind-mounted into the prover container (kzgsrs etc.); even dev mode stats the directory
+# ts-libs/    -> workspace packages that contracts/ depends on
+# contracts/  -> bind-mounted by the quickstart's deploy container (L1 rollup + L2 message service)
+# docker/     -> compose specs + docker/config/* (genesis templates, prover, coordinator)
+# scripts/    -> shared helper scripts referenced by the quickstart
+# docs/getting-started/lineth-stack -> the quickstart itself (docker-compose.yml, versions.env, scripts/start.sh)
+contracts
+patches
+prover/prover-assets
+ts-libs
+docker
+scripts
+docs/getting-started/lineth-stack

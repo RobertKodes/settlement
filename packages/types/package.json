@@ -1,0 +1,28 @@
+{
+  "name": "@settlement/types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Intent, quote and settlement-receipt schemas (zod) plus generated JSON Schema",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "schema"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && tsx scripts/gen-json-schema.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "gen:schema": "tsx scripts/gen-json-schema.ts"
+  },
+  "dependencies": {
+    "zod": "^4.1.0"
+  }
+}

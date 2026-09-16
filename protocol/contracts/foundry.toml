@@ -1,0 +1,30 @@
+[profile.default]
+src = "src"
+test = "test"
+script = "script"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.30"
+# The devnet genesis (chain/lineth/upstream/docker/config/l2-genesis-initialization/genesis-besu.json.template)
+# enables the Osaka-era forks at block 0, so Prague bytecode is safe. Revisit in ADR-0010 when the
+# production chain's fork schedule is fixed.
+evm_version = "prague"
+optimizer = true
+optimizer_runs = 10_000
+via_ir = false
+bytecode_hash = "none"
+cbor_metadata = false
+fs_permissions = []
+gas_reports = ["*"]
+
+[fmt]
+line_length = 100
+tab_width = 4
+bracket_spacing = false
+int_types = "long"
+quote_style = "double"
+number_underscore = "thousands"
+
+[rpc_endpoints]
+l2_devnet = "${L2_RPC_URL}"
+l1_local = "${L1_RPC_URL}"

@@ -1,0 +1,12 @@
+{
+  "name": "@settlement/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Foundry project: settlement, DEX and account contracts (Phase 3+). Placeholder only for now.",
+  "scripts": {
+    "build": "forge build",
+    "typecheck": "forge build --sizes",
+    "test": "forge test",
+    "lint": "forge fmt --check"
+  }
+}

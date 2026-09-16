@@ -1,0 +1,26 @@
+{
+  "name": "@settlement/integration-gateway",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Circle Gateway client interface + in-memory mock",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@settlement/config": "workspace:*"
+  }
+}
