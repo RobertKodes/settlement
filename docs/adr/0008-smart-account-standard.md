@@ -23,6 +23,8 @@ Circle Modular Wallets are ERC-4337 accounts implementing ERC-6900 (modular), wi
   USDC permit through ERC-1271). The verification path is an explicit constructor flag (`SOLIDITY_P256`): pure Solidity on this devnet, precompile with
   probe elsewhere. Chosen over OpenZeppelin's automatic probe because Foundry's fork simulation refuses calls to
   code-less addresses, which made every scripted deployment fail before the chain was even reached.
+- Client side: `packages/chain` builds and signs the same operations from TypeScript (`Passkey`, `buildSignedUserOp`,
+  `submitUserOps`); `test/devnet.test.ts` reproduces the flow against the devnet and is the seed of the SDK.
 - Not yet: ERC-6900 modules (policies, session keys, recovery), the WebAuthn envelope
   (`authenticatorData`/`clientDataJSON` parsing) and ERC-7739 defensive rehashing for ERC-1271. All three are the
   next slice; the wire format of signatures will change from raw `r‖s` to the WebAuthn struct then.

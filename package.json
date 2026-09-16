@@ -14,7 +14,8 @@
     "lint:fix": "biome check --write .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "gen:schema": "pnpm --filter @settlement/types gen:schema"
+    "gen:schema": "pnpm --filter @settlement/types gen:schema",
+    "gen:abi": "pnpm --filter @settlement/contracts-abi gen:abi"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",

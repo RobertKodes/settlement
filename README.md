@@ -54,6 +54,8 @@ make test              # vitest across packages + forge test
 | `chain/lineth/` | pinned upstream commit, sparse-clone paths, `devnet.env`, chain-ID procedure | done |
 | `chain/scripts/` | `doctor`, `bootstrap`, `preflight`, `up`, `status`, `logs`, `down`, `reset` | done |
 | `packages/types/` | `@settlement/types`: intent, quote, settlement receipt (zod + generated JSON Schema) | done |
+| `packages/contracts-abi/` | ABIs generated from the Foundry artifacts (`pnpm gen:abi`), committed | done |
+| `packages/chain/` | `@settlement/chain`: viem clients, P-256 passkey signing, ERC-4337 v0.8 user-op building + paymaster data, submission, L1-finality reads; `pnpm --filter @settlement/chain test:devnet` replays Milestone C from TypeScript | Milestone C |
 | `packages/config/` | `@settlement/config`: chain registry with chain-scoped decimals, CCTP domains, Circle/Bridge endpoints, env loader | done |
 | `integrations/circle/{cctp,gateway,arc}/` | interfaces + in-memory mocks + tests | interfaces only |
 | `integrations/fiat/` | `FiatProvider` interface + mock; Bridge mapping | interfaces only |
@@ -68,7 +70,7 @@ Reserved by blueprint section 25 and created when populated: `chain/{genesis,l1-
 `protocol/contracts/{amm,stableswap,router,rfq,settlement,accounts,paymaster,governance}`,
 `integrations/{circle/wallets,circle/paymaster,oracles,custody}`, `services/{auth,accounts,
 intent-engine,router,quote-engine,execution,indexer,reconciliation,risk,notifications,webhooks}`,
-`apps/*`, `packages/{sdk,ui,contracts-abi,crypto}`, `infra/{terraform,kubernetes,monitoring}`,
+`apps/*`, `packages/{sdk,ui,crypto}`, `infra/{terraform,kubernetes,monitoring}`,
 `security/{invariants,runbooks,audits}`.
 
 ## Conventions

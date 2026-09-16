@@ -1,0 +1,30 @@
+{
+  "name": "@settlement/chain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "viem clients, passkey (P-256) signing, ERC-4337 v0.8 user-op building, paymaster data, submission and L1-finality reads",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:devnet": "DEVNET=1 vitest run"
+  },
+  "dependencies": {
+    "@noble/curves": "^1.9.1",
+    "@settlement/config": "workspace:*",
+    "@settlement/contracts-abi": "workspace:*",
+    "viem": "^2.37.0"
+  }
+}

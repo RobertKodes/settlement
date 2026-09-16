@@ -47,11 +47,28 @@ importers:
 
   integrations/fiat: {}
 
+  packages/chain:
+    dependencies:
+      '@noble/curves':
+        specifier: ^1.9.1
+        version: 1.9.1
+      '@settlement/config':
+        specifier: workspace:*
+        version: link:../config
+      '@settlement/contracts-abi':
+        specifier: workspace:*
+        version: link:../contracts-abi
+      viem:
+        specifier: ^2.37.0
+        version: 2.56.5(typescript@5.9.3)(zod@4.6.5)
+
   packages/config:
     dependencies:
       zod:
         specifier: ^4.1.0
         version: 4.6.5
+
+  packages/contracts-abi: {}
 
   packages/types:
     dependencies:
