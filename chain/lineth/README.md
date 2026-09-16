@@ -23,6 +23,14 @@ into `upstream/`, which is gitignored. Images are pulled from the registries the
    `chain/scripts/lib.sh` appends `blockExoticSubdeps: false` and `verifyDepsBeforeRun: false` to the
    vendored `pnpm-workspace.yaml` (pnpm 11 ignores `.npmrc` for these). Both are worth an upstream issue.
 
+## Contracts on the devnet
+
+`make devnet-deploy` runs `protocol/contracts/script/DeployDevnet.s.sol` with the quickstart's generated L2
+deployer key (`artifacts/accounts/runtime-keys.env`, funded in the L2 genesis) and writes the addresses to
+`chain/lineth/deployments.local.json` (gitignored: they change on every reset). `make devnet-status` shows
+them next to the L1 finality line (`currentL2BlockNumber()` on the `LinethRollupV8` proxy the quickstart
+deployed, address in `artifacts/deployments/addresses.json` under `l1`).
+
 ## Stop, resume, reset
 
 - `make devnet-down` = `docker compose stop` (containers and volumes kept) and records the running services

@@ -25,3 +25,4 @@ protocol/contracts/broadcast/
 .DS_Store
 .idea/
 .vscode/
+chain/lineth/deployments.local.json

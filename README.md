@@ -34,7 +34,8 @@ amd64-only and is not run locally, see ADR-0005).
 make doctor            # checks every tool above and prints the fix for anything missing
 make bootstrap         # pnpm install + forge-std + sparse clone of the pinned Lineth commit
 make devnet-up         # local L1 (Besu+Teku) + L2 (Maru+Besu) + coordinator + dev prover; waits for both RPCs
-make devnet-status     # chain IDs, block heights, service table
+make devnet-status     # chain IDs, block heights, L1 finality, service table
+make devnet-deploy     # NetworkVersion + TestUSDC on the L2 -> chain/lineth/deployments.local.json
 make services-up       # Postgres 16 (:5439) + Redis 7 (:6389) for the ledger
 make ledger-migrate    # applies services/ledger/migrations/*.sql
 make test              # vitest across packages + forge test
@@ -55,7 +56,8 @@ make test              # vitest across packages + forge test
 | `packages/config/` | `@settlement/config`: chain registry with chain-scoped decimals, CCTP domains, Circle/Bridge endpoints, env loader | done |
 | `integrations/circle/{cctp,gateway,arc}/` | interfaces + in-memory mocks + tests | interfaces only |
 | `integrations/fiat/` | `FiatProvider` interface + mock; Bridge mapping | interfaces only |
-| `protocol/contracts/` | Foundry project; `NetworkVersion` placeholder + test + deploy script | placeholder |
+| `protocol/contracts/` | Foundry project; `NetworkVersion`, `TestUSDC` (6 dec, EIP-2612, devnet only per ADR-0007), tests, deploy scripts | started |
+| `services/api/` | `@settlement/api`: Fastify `/v1/intents` (idempotency, request ids, error envelope), `/v1/health` chain probes | started |
 | `services/ledger/` | schema v1 (every blueprint section 27 entity), `ledger_post()`, migrate/smoke scripts | done |
 | `infra/docker/`, `infra/ci/`, `.github/workflows/ci.yml` | services compose; CI jobs `ts`, `contracts`, `schema`, `name-check` | done |
 | `docs/architecture/`, `docs/adr/`, `docs/api/` | blueprint, 25 ADRs (10 accepted, 15 proposed), API conventions | done |
@@ -63,7 +65,7 @@ make test              # vitest across packages + forge test
 
 Reserved by blueprint section 25 and created when populated: `chain/{genesis,l1-contracts,prover}`,
 `protocol/contracts/{amm,stableswap,router,rfq,settlement,accounts,paymaster,governance}`,
-`integrations/{circle/wallets,circle/paymaster,oracles,custody}`, `services/{api,auth,accounts,
+`integrations/{circle/wallets,circle/paymaster,oracles,custody}`, `services/{auth,accounts,
 intent-engine,router,quote-engine,execution,indexer,reconciliation,risk,notifications,webhooks}`,
 `apps/*`, `packages/{sdk,ui,contracts-abi,crypto}`, `infra/{terraform,kubernetes,monitoring}`,
 `security/{invariants,runbooks,audits}`.

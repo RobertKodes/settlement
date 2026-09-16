@@ -2,12 +2,14 @@
 # Requires GNU make >= 3.81 (macOS ships 3.81). Run `make help` for the list.
 
 SHELL := /bin/bash
+# foundryup installs outside the default PATH; turbo runs the contracts package's forge scripts.
+export PATH := $(HOME)/.foundry/bin:$(PATH)
 .DEFAULT_GOAL := help
 CHAIN_SCRIPTS := chain/scripts
 FORGE ?= $(shell command -v forge 2>/dev/null || echo $(HOME)/.foundry/bin/forge)
 
 .PHONY: help doctor bootstrap install build lint lint-fix typecheck test forge-build forge-test \
-        devnet-bootstrap devnet-preflight devnet-up devnet-status devnet-logs devnet-down devnet-reset \
+        devnet-bootstrap devnet-preflight devnet-up devnet-status devnet-logs devnet-down devnet-reset devnet-deploy \
         services-up services-down ledger-migrate adr-new check-name
 
 help: ## Show this help
@@ -65,6 +67,9 @@ devnet-down: ## Stop the devnet, keep volumes
 
 devnet-reset: ## Stop the devnet and wipe volumes/artifacts (required after a chain-ID change)
 	@bash $(CHAIN_SCRIPTS)/reset.sh
+
+devnet-deploy: ## Deploy NetworkVersion + TestUSDC to the running L2, record chain/lineth/deployments.local.json
+	@bash $(CHAIN_SCRIPTS)/deploy.sh
 
 services-up: ## Postgres 16 + Redis 7 for the ledger (infra/docker/compose.services.yml)
 	docker compose -f infra/docker/compose.services.yml up -d --wait

@@ -25,6 +25,17 @@ case "$lg" in
   *-32601*|"") warn "linea_estimateGas not served yet (sequencer still starting?)" ;;
   *) ok "linea_estimateGas namespace live (replied: $(printf '%s' "$lg" | sed -E 's/.*"message":"([^"]{0,60}).*/\1/'))" ;;
 esac
+# Milestone B: what the L1 rollup contract has finalized (proof verified on L1) vs the L2 head.
+addrs="$STACK_DIR/artifacts/deployments/addresses.json"
+rollup=$( [ -f "$addrs" ] && python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print((d.get("l1") or {}).get("LinethRollupV8") or d.get("LinethRollupV8") or "")' "$addrs" 2>/dev/null)
+if [ -n "$rollup" ]; then
+  fin=$(rpc "$L1_HOST_RPC_URL" eth_call "[{\"to\":\"$rollup\",\"data\":\"0x695378f5\"},\"latest\"]")   # currentL2BlockNumber()
+  head=$(hex2dec "$(rpc "$L2_HOST_RPC_URL" eth_blockNumber)")
+  [ -n "$fin" ] && ok "L1 finality: rollup $rollup finalized L2 block $(hex2dec "$fin") of $head" || warn "L1 finality: rollup $rollup not answering"
+fi
+if [ -f "$LINETH_DIR/deployments.local.json" ]; then
+  ok "devnet contracts: $(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(", ".join(f"{k}={v}" for k,v in d["contracts"].items()))' "$LINETH_DIR/deployments.local.json")"
+fi
 if command -v cast >/dev/null 2>&1; then
   printf '\n%s== L2 latest block (cast) ==%s\n' "$c_cyn" "$c_off"
   cast block latest --rpc-url "$L2_HOST_RPC_URL" -f number -f timestamp -f gasUsed 2>/dev/null | paste - - - | sed 's/^/  number\/timestamp\/gasUsed: /' || true

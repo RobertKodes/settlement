@@ -1,0 +1,22 @@
+{
+  "name": "@settlement/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Product API (/v1): intents, health. Fastify + zod, conventions from docs/api/conventions.md",
+  "main": "./dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@settlement/config": "workspace:*",
+    "@settlement/types": "workspace:*",
+    "fastify": "^5.6.0",
+    "viem": "^2.37.0",
+    "zod": "^4.1.0"
+  }
+}
