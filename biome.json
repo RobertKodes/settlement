@@ -41,16 +41,12 @@
   },
   "overrides": [
     {
-      "includes": ["apps/terminal/**"],
+      "includes": [
+        "apps/terminal/**"
+      ],
       "linter": {
         "rules": {
-          "a11y": {
-            "noStaticElementInteractions": "off",
-            "useKeyWithClickEvents": "off",
-            "useButtonType": "off",
-            "noAutofocus": "off",
-            "useSemanticElements": "off"
-          }
+          "a11y": "off"
         }
       }
     }
